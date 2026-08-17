@@ -1,3 +1,4 @@
+/* Root Variables */
 * {
     box-sizing: border-box;
 }
@@ -41,6 +42,44 @@ footer {
     text-align: center;
     background-color: #ffffff;
     border-top: 1px solid #ddd;
+}
+
+/* Site search */
+
+.site-search {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem 1rem;
+}
+
+.site-search form {
+    margin: 0;
+}
+
+.search-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input-wrapper input {
+    flex-grow: 1;
+    padding: 0.7rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.search-input-wrapper button {
+    padding: 0.7rem 1.2rem;
+    border: none;
+    border-radius: 5px;
+    background-color: #222;
+    color: #fff;
+    cursor: pointer;
+}
+
+.search-input-wrapper button:hover {
+    opacity: 0.85;
 }
 
 /* Events page */
@@ -213,9 +252,52 @@ footer {
 }
 
 
-/*Responsiveness*/
+/* Category filtering */
 
-/*Events Page*/
+.category-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.category-filter a {
+    padding: 0.6rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    text-decoration: none;
+    color: #222;
+    background-color: #fff;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.category-filter a:hover {
+    background-color: #222;
+    color: #fff;
+}
+
+.category-filter a.active {
+    background-color: #222;
+    color: #fff;
+}
+
+/* Responsiveness */
+
+/* Search Nav */
+
+@media (max-width: 600px) {
+
+    .search-input-wrapper {
+        flex-direction: column;
+    }
+
+    .search-input-wrapper button {
+        width: 100%;
+    }
+
+}
+
+/* Events Page */
 
 @media (max-width: 900px) {
 
@@ -237,7 +319,7 @@ footer {
 
 }
 
-/*Individual Event Page*/
+/* Individual Event Page */
 
 @media (max-width: 900px) {
 

@@ -17,12 +17,31 @@
         <nav>
             <a href="{% url 'home' %}">Event Horizon</a>
 
-            <div>
+            <div class="nav-links">
                 <a href="{% url 'event_list' %}">Explore</a>
                 <a href="#">About</a>
                 <a href="#">Login</a>
             </div>
         </nav>
+
+        <div class="site-search">
+            <form method="GET" action="{% url 'event_list' %}">
+
+                <div class="search-input-wrapper">
+                    <input
+                        type="search"
+                        id="site-search-input"
+                        name="q"
+                        placeholder="Search events..."
+                        value="{{ request.GET.q|default:'' }}"
+                    >
+
+                    <button type="submit">
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
     </header>
 
     <main>

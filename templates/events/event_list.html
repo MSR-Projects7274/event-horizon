@@ -14,6 +14,33 @@
         </p>
     </div>
 
+    {% if search_query %}
+        <p>
+            Search results for:
+            <strong>"{{ search_query }}"</strong>
+        </p>
+    {% endif %}
+
+    <nav class="category-filter" aria-label="Event categories">
+        <a
+            href="{% url 'event_list' %}{% if search_query %}?q={{ search_query|urlencode }}{% endif %}"
+            class="{% if not selected_category %}active{% endif %}"
+        >
+            All Events
+        </a>
+
+        {% for category in categories %}
+
+            <a
+                href="{% url 'event_list' %}?category={{ category.id }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                class="{% if selected_category == category.id|stringformat:'s' %}active{% endif %}"
+            >
+                {{ category.name }}
+            </a>
+
+        {% endfor %}
+    </nav>
+
     {% if events %}
 
         <div class="event-grid">
@@ -80,7 +107,7 @@
 
     {% else %}
 
-        <p>There are currently no upcoming events.</p>
+        <p>There are no upcoming events in this category.</p>
 
     {% endif %}
 
