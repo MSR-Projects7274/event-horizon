@@ -56,9 +56,19 @@
 
         </div>
 
+        {% if event.places_remaining > 0 %}
+
         <a href="{% url 'book_event' event.id %}" class="event-book-button">
             Book Now
         </a>
+
+        {% else %}
+
+        <span class="event-book-button sold-out-button">
+            Sold Out
+        </span>
+
+        {% endif %}
 
     </div>
 

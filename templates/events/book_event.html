@@ -18,6 +18,10 @@
             Choose how many places you'd like to book.
         </p>
 
+        <p>
+            <strong>{{ event.places_remaining }}</strong> places remaining.
+        </p>
+
         <form method="POST">
             {% csrf_token %}
 

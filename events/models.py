@@ -50,11 +50,27 @@ class Event(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def places_booked(self):
+        """Return the number of places currently booked."""
+
+        return sum(
+            booking.quantity
+            for booking in self.bookings.all()
+        )
+
+
+    @property
+    def places_remaining(self):
+        """Return the number of places still available."""
+
+        return self.capacity - self.places_booked
+
     class Meta:
-        ordering = ['date', 'time']
+            ordering = ['date', 'time']
 
     def __str__(self):
-        return self.name
+            return self.name
     
 class Booking(models.Model):
     """A user's booking for an event."""

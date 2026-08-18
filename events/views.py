@@ -27,8 +27,7 @@ def event_list(request):
         events = events.filter(category_id=category_id)
 
     return render(
-        request,
-        'events/event_list.html',
+        request,'events/event_list.html',
         {
             'events': events,
             'categories': categories,
@@ -48,19 +47,14 @@ def event_detail(request, event_id):
     )
 
     return render(
-        request,
-        'events/event_detail.html',
-        {'event': event}
+        request,'events/event_detail.html',{'event': event}
     )
 
 
 def event_detail(request, event_id):
     """Display the details of a single event."""
     event = get_object_or_404(
-        Event,
-        id=event_id,
-        active=True
-    )
+        Event, id=event_id, active=True)
 
     return render(
         request,
@@ -73,21 +67,34 @@ def book_event(request, event_id):
     """Allow an authenticated user to book places at an event."""
 
     event = get_object_or_404(
-        Event,
-        id=event_id,
-        active=True
-    )
+        Event, id=event_id, active=True)
+
+    if event.places_remaining <= 0:
+        return redirect('event_detail', event_id=event.id)
 
     if request.method == 'POST':
         form = BookingForm(request.POST)
 
         if form.is_valid():
-            booking = form.save(commit=False)
-            booking.user = request.user
-            booking.event = event
-            booking.save()
 
-            return redirect('event_detail', event_id=event.id)
+            quantity = form.cleaned_data['quantity']
+
+            if quantity > event.places_remaining:
+                form.add_error(
+                    'quantity',
+                    f'Only {event.places_remaining} places are available.'
+                )
+
+            else:
+                booking = form.save(commit=False)
+                booking.user = request.user
+                booking.event = event
+                booking.save()
+
+                return redirect(
+                    'event_detail',
+                    event_id=event.id
+                )
 
     else:
         form = BookingForm()
