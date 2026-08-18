@@ -16,6 +16,31 @@
 
     </div>
 
+
+    <section class="account-details">
+
+        <h2>Account Details</h2>
+
+        <div class="account-details-list">
+
+            <div class="account-detail">
+                <strong>Username</strong>
+                <span>{{ profile_user.username }}</span>
+            </div>
+
+            <div class="account-detail">
+                <strong>Email</strong>
+                <span>{{ profile_user.email }}</span>
+            </div>
+
+            <a href="{% url 'edit_profile' %}" class="event-view-button">
+                Edit Details
+            </a>
+
+        </div>
+
+    </section>
+
     <section class="profile-bookings">
 
         <h2>My Bookings</h2>

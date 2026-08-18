@@ -418,6 +418,36 @@ footer {
     margin-bottom: 1.5rem;
 }
 
+.account-details {
+    margin-bottom: 3rem;
+    padding: 1.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+.account-details h2 {
+    margin-bottom: 1.25rem;
+}
+
+.account-details-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.account-detail {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #eee;
+}
+
+.account-detail:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
 .booking-grid {
     display: grid;
     grid-template-columns: repeat(

@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect, render
 
 from events.models import Booking
+from .forms import ProfileForm
 
 
 def register(request):
@@ -43,5 +44,34 @@ def profile(request):
         'profiles/profile.html',
         {
             'bookings': bookings,
+            'profile_user': request.user,
+        }
+    )
+
+@login_required
+def edit_profile(request):
+    """Allow the user to update their account details."""
+
+    if request.method == 'POST':
+        form = ProfileForm(
+            request.POST,
+            instance=request.user
+        )
+
+        if form.is_valid():
+            form.save()
+
+            return redirect('profile')
+
+    else:
+        form = ProfileForm(
+            instance=request.user
+        )
+
+    return render(
+        request,
+        'profiles/edit_profile.html',
+        {
+            'form': form,
         }
     )
