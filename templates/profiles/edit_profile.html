@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile | Event Horizon{% endblock %}
+
+{% block content %}
+
+<section class="profile-page">
+
+    <div class="profile-header">
+
+        <h1>Edit Profile</h1>
+
+        <p>
+            Update your account details below.
+        </p>
+
+    </div>
+
+    <div class="profile-form">
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <div class="profile-form-actions">
+
+                <button
+                    type="submit"
+                    class="event-view-button"
+                >
+                    Save Changes
+                </button>
+
+                <a
+                    href="{% url 'profile' %}"
+                    class="cancel-button"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}
