@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Cancel Booking | Event Horizon{% endblock %}
+
+{% block content %}
+
+<section class="cancel-booking-page">
+
+    <h1>Cancel Booking</h1>
+
+    <p>
+        Are you sure you want to cancel your booking for:
+    </p>
+
+    <h2>
+        {{ booking.event.name }}
+    </h2>
+
+    <div class="cancel-booking-details">
+
+        <p>
+            <strong>Date:</strong>
+            {{ booking.event.date }}
+        </p>
+
+        <p>
+            <strong>Time:</strong>
+            {{ booking.event.time }}
+        </p>
+
+        <p>
+            <strong>Places:</strong>
+            {{ booking.quantity }}
+        </p>
+
+    </div>
+
+    <div class="cancel-booking-actions">
+
+        <form
+            method="POST"
+            action="{% url 'cancel_booking' booking.id %}"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="cancel-button"
+            >
+                Yes, Cancel Booking
+            </button>
+        </form>
+
+        <a
+            href="{% url 'profile' %}"
+            class="event-view-button"
+        >
+            Keep Booking
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}

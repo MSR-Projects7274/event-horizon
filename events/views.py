@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import BookingForm
-from .models import Category, Event
+from .models import Category, Event, Booking
 from django.db import models
 
 
@@ -67,10 +67,16 @@ def book_event(request, event_id):
     """Allow an authenticated user to book places at an event."""
 
     event = get_object_or_404(
-        Event, id=event_id, active=True)
+        Event,
+        id=event_id,
+        active=True
+    )
 
     if event.places_remaining <= 0:
-        return redirect('event_detail', event_id=event.id)
+        return redirect(
+            'event_detail',
+            event_id=event.id
+        )
 
     if request.method == 'POST':
         form = BookingForm(request.POST)
@@ -105,5 +111,29 @@ def book_event(request, event_id):
         {
             'event': event,
             'form': form,
+        }
+    )
+
+
+@login_required
+def cancel_booking(request, booking_id):
+    """Cancel a booking belonging to the logged-in user."""
+
+    booking = get_object_or_404(
+        Booking,
+        id=booking_id,
+        user=request.user
+    )
+
+    if request.method == 'POST':
+        booking.delete()
+
+        return redirect('profile')
+
+    return render(
+        request,
+        'events/cancel_booking.html',
+        {
+            'booking': booking,
         }
     )

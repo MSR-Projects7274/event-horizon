@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}My Account | Event Horizon{% endblock %}
+
+{% block content %}
+
+<section class="profile-page">
+
+    <div class="profile-header">
+
+        <h1>My Account</h1>
+
+        <p>
+            Welcome back, {{ user.username }}.
+        </p>
+
+    </div>
+
+    <section class="profile-bookings">
+
+        <h2>My Bookings</h2>
+
+        {% if bookings %}
+
+            <div class="booking-grid">
+
+                {% for booking in bookings %}
+
+                    <article class="booking-card">
+
+                        {% if booking.event.image %}
+                            <div class="booking-card-image">
+                                <img
+                                    src="{{ booking.event.image.url }}"
+                                    alt="{{ booking.event.name }}"
+                                >
+                            </div>
+                        {% endif %}
+
+                        <div class="booking-card-content">
+
+                            <p class="event-category">
+                                {{ booking.event.category.name }}
+                            </p>
+
+                            <h3>
+                                {{ booking.event.name }}
+                            </h3>
+
+                            <div class="booking-details">
+
+                                <p>
+                                    <strong>Date:</strong>
+                                    {{ booking.event.date }}
+                                </p>
+
+                                <p>
+                                    <strong>Time:</strong>
+                                    {{ booking.event.time }}
+                                </p>
+
+                                <p>
+                                    <strong>Places:</strong>
+                                    {{ booking.quantity }}
+                                </p>
+
+                            </div>
+
+                            <div class="booking-card-actions">
+                                <a
+                                    href="{% url 'event_detail' booking.event.id %}"
+                                    class="event-view-button"
+                                >
+                                    View Event
+                                </a>
+
+                                <a
+                                    href="{% url 'cancel_booking' booking.id %}"
+                                    class="cancel-button"
+                                >
+                                    Cancel
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="empty-bookings">
+
+                <h3>No bookings yet</h3>
+
+                <p>
+                    You haven't booked an event yet.
+                    Why not see what's happening?
+                </p>
+
+                <a
+                    href="{% url 'event_list' %}"
+                    class="event-view-button"
+                >
+                    Explore Events
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</section>
+
+{% endblock %}

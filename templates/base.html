@@ -40,24 +40,17 @@
 
                     <div class="user-menu">
 
-                        <span class="welcome-message">
+                        <a
+                            href="{% url 'profile' %}" class="welcome-message">
                             Welcome, {{ user.username }}
-                        </span>
+                        </a>
 
-                        <form
-                            method="POST"
-                            action="{% url 'logout' %}"
-                            class="logout-form"
-                        >
+                        <form method="POST" action="{% url 'logout' %}" class="logout-form">
                             {% csrf_token %}
 
-                            <button
-                                type="submit"
-                                class="logout-button"
-                            >
+                            <button type="submit" class="logout-button">
                                 Logout
                             </button>
-
                         </form>
 
                     </div>
