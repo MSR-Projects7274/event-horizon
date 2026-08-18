@@ -178,10 +178,11 @@ footer {
 .event-card {
     background-color: #ffffff;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid #ddd;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .event-card-image {
@@ -245,6 +246,42 @@ footer {
     text-decoration: none;
     background-color: #222;
     color: #ffffff;
+}
+
+/* Sold Out Overlay */
+
+.sold-out-card {
+    filter: grayscale(80%);
+    opacity: 0.75;
+}
+
+.sold-out-overlay {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(0, 0, 0, 0.55);
+
+    z-index: 5;
+
+    pointer-events: all;
+}
+
+.sold-out-overlay span {
+    padding: 0.75rem 2rem;
+
+    border: 2px solid #fff;
+    border-radius: 5px;
+
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+
+    transform: rotate(-8deg);
 }
 
 /* Event detail page */

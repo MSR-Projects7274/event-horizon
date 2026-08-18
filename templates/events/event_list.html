@@ -47,7 +47,13 @@
 
             {% for event in events %}
 
-                <article class="event-card">
+                <article class="event-card {% if event.places_remaining <= 0 %}sold-out-card{% endif %}">
+
+                {% if event.places_remaining <= 0 %}
+                    <div class="sold-out-overlay">
+                        <span>SOLD OUT</span>
+                    </div>
+                {% endif %}
 
                     {% if event.image %}
                         <div class="event-card-image">
@@ -88,12 +94,22 @@
                                 £{{ event.price }}
                             </strong>
 
+                            {% if event.places_remaining > 0 %}
+
                             <a
                                 href="{% url 'event_detail' event.id %}"
                                 class="event-view-button"
                             >
                                 View Event
                             </a>
+
+                            {% else %}
+
+                                <span class="event-view-button sold-out-view-button">
+                                    Sold Out
+                                </span>
+
+                            {% endif %}
 
                         </div>
 
