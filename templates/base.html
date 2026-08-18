@@ -42,7 +42,7 @@
 
                         <a
                             href="{% url 'profile' %}" class="welcome-message">
-                            Welcome, {{ user.username }}
+                            Welcome {{ user.username }}
                         </a>
 
                         <form method="POST" action="{% url 'logout' %}" class="logout-form">
