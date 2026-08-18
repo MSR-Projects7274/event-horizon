@@ -14,14 +14,68 @@
 <body>
 
     <header>
-        <nav>
-            <a href="{% url 'home' %}">Event Horizon</a>
+        <nav class="main-nav">
+
+            <div class="nav-brand">
+                <a href="{% url 'home' %}">
+                    Event Horizon
+                </a>
+            </div>
 
             <div class="nav-links">
-                <a href="{% url 'event_list' %}">Explore</a>
-                <a href="#">About</a>
-                <a href="#">Login</a>
+
+                <a href="{% url 'event_list' %}">
+                    Explore
+                </a>
+
+                <a href="#">
+                    About
+                </a>
+
             </div>
+
+            <div class="nav-account">
+
+                {% if user.is_authenticated %}
+
+                    <div class="user-menu">
+
+                        <span class="welcome-message">
+                            Welcome, {{ user.username }}
+                        </span>
+
+                        <form
+                            method="POST"
+                            action="{% url 'logout' %}"
+                            class="logout-form"
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                class="logout-button"
+                            >
+                                Logout
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                {% else %}
+
+                    <a href="{% url 'login' %}">
+                        Login
+                    </a>
+
+                    <a href="{% url 'register' %}">
+                        Register
+                    </a>
+
+                {% endif %}
+
+            </div>
+
         </nav>
 
         <div class="site-search">

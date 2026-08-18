@@ -72,6 +72,10 @@ TEMPLATES = [
     },
 ]
 
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+LOGIN_URL = 'login'
+
 WSGI_APPLICATION = 'event_horizon.wsgi.application'
 
 
