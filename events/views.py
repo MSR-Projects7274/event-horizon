@@ -1,7 +1,9 @@
-from django.db import models
-from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
 
+from .forms import BookingForm
 from .models import Category, Event
+from django.db import models
 
 
 def event_list(request):
@@ -64,4 +66,37 @@ def event_detail(request, event_id):
         request,
         'events/event_detail.html',
         {'event': event}
+    )
+
+@login_required
+def book_event(request, event_id):
+    """Allow an authenticated user to book places at an event."""
+
+    event = get_object_or_404(
+        Event,
+        id=event_id,
+        active=True
+    )
+
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.user = request.user
+            booking.event = event
+            booking.save()
+
+            return redirect('event_detail', event_id=event.id)
+
+    else:
+        form = BookingForm()
+
+    return render(
+        request,
+        'events/book_event.html',
+        {
+            'event': event,
+            'form': form,
+        }
     )

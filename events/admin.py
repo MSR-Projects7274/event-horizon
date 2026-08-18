@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Event
+from .models import Booking, Category, Event
 
 
 @admin.register(Category)
@@ -35,3 +35,17 @@ class EventAdmin(admin.ModelAdmin):
     )
 
     ordering = ('date', 'time')
+
+@admin.register(Booking)
+class BookingAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'event',
+        'quantity',
+        'created_at',
+    )
+
+    list_filter = (
+        'event',
+        'created_at',
+    )

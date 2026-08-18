@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Book {{ event.name }} | Event Horizon{% endblock %}
+
+{% block content %}
+
+<section class="booking-page">
+
+    <div class="booking-card">
+
+        <p class="event-category">
+            {{ event.category.name }}
+        </p>
+
+        <h1>Book {{ event.name }}</h1>
+
+        <p>
+            Choose how many places you'd like to book.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button type="submit">
+                Confirm Booking
+            </button>
+        </form>
+
+        <a href="{% url 'event_detail' event.id %}">
+            Back to event
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}
