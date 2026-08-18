@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect, render
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 
 from events.models import Booking
 from .forms import ProfileForm
@@ -99,6 +101,37 @@ def edit_profile(request):
     return render(
         request,
         'profiles/edit_profile.html',
+        {
+            'form': form,
+        }
+    )
+
+@login_required
+def change_password(request):
+    """Allow the user to change their password."""
+
+    if request.method == 'POST':
+        form = PasswordChangeForm(
+            request.user,
+            request.POST
+        )
+
+        if form.is_valid():
+            user = form.save()
+
+            update_session_auth_hash(
+                request,
+                user
+            )
+
+            return redirect('profile')
+
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(
+        request,
+        'profiles/change_password.html',
         {
             'form': form,
         }
