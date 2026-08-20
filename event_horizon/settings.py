@@ -59,6 +59,9 @@ INSTALLED_APPS = [
     'events',
     'bookings',
     'profiles',
+
+    # Third-party apps
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -151,9 +154,14 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-STATICFILES_STORAGE = (
-    'whitenoise.storage.CompressedManifestStaticFilesStorage'
-)
+STORAGES = {
+    'default': {
+        'BACKEND': 'storages.backends.s3.S3Storage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -163,6 +171,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 STRIPE_PUBLIC_KEY = env('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
 STRIPE_WH_SECRET = env('STRIPE_WH_SECRET', default='')
+
+# AWS Environment Variables
+
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
