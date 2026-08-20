@@ -15,8 +15,9 @@ db.sqlite3
 # Environment variables
 .env
 
-# User uploaded media
+# User uploaded media and generated files
 media/
+staticfiles/
 
 # Operating system
 .DS_Store
