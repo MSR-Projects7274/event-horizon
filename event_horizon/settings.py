@@ -32,7 +32,7 @@ environ.Env.read_env(
 SECRET_KEY = 'django-insecure-ot%8nfx@b%y0ado-ff!61zoy@-vz*#1$q16mwrdw-qo=2&h-sg'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
     'event-horizon-msr.herokuapp.com',
