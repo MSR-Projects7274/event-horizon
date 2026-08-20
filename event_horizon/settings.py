@@ -38,11 +38,10 @@ SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
-ALLOWED_HOSTS = [
-    'event-horizon-msr.herokuapp.com',
-    'localhost',
-    '127.0.0.1',
-]
+ALLOWED_HOSTS = os.environ.get(
+    'ALLOWED_HOSTS',
+    'localhost,127.0.0.1'
+).split(',')
 
 
 # Application definition
