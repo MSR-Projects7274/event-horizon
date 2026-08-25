@@ -1,6 +1,280 @@
 {% extends "base.html" %}
 
+{% block title %}Event Horizon | Experiences Beyond the Ordinary{% endblock %}
+
 {% block content %}
-    <h1>Event Horizon</h1>
-    <p>Discover experiences beyond the ordinary.</p>
+
+<section class="home-hero">
+
+    <div class="home-hero-content">
+
+        <p class="home-eyebrow">
+            EXPERIENCE SOMETHING DIFFERENT
+        </p>
+
+        <h1>
+            Event Horizon
+        </h1>
+
+        <p class="home-hero-text">
+            Discover experiences beyond the ordinary.
+            From creative workshops and unforgettable food tours
+            to live music and events that are not for the faint of heart.
+        </p>
+
+        <a
+            href="{% url 'event_list' %}"
+            class="event-view-button"
+        >
+            Explore Events
+        </a>
+
+    </div>
+
+</section>
+
+
+{% if upcoming_events %}
+
+<section class="home-ticker-section">
+
+    <div class="home-section-heading">
+
+        <p class="home-eyebrow">
+            WHAT'S COMING UP
+        </p>
+
+        <h2>
+            Upcoming Events
+        </h2>
+
+    </div>
+
+
+    <div class="event-ticker">
+
+        <div class="event-ticker-track">
+
+            {% for event in upcoming_events %}
+
+                <a
+                    href="{% url 'event_detail' event.id %}"
+                    class="event-ticker-item"
+                >
+                    <span class="ticker-event-name">
+                        {{ event.name }}
+                    </span>
+
+                    <span class="ticker-divider">
+                        •
+                    </span>
+
+                    <span class="ticker-event-date">
+                        {{ event.date|date:"j F" }}
+                    </span>
+                </a>
+
+            {% endfor %}
+
+
+            {% for event in upcoming_events %}
+
+                <a
+                    href="{% url 'event_detail' event.id %}"
+                    class="event-ticker-item"
+                    aria-hidden="true"
+                    tabindex="-1"
+                >
+                    <span class="ticker-event-name">
+                        {{ event.name }}
+                    </span>
+
+                    <span class="ticker-divider">
+                        •
+                    </span>
+
+                    <span class="ticker-event-date">
+                        {{ event.date|date:"j F" }}
+                    </span>
+                </a>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endif %}
+
+
+{% if featured_events %}
+
+<section class="home-featured-section">
+
+    <div class="home-section-heading">
+
+        <p class="home-eyebrow">
+            FIND YOUR NEXT EXPERIENCE
+        </p>
+
+        <h2>
+            Coming Up
+        </h2>
+
+    </div>
+
+
+    <div class="home-event-grid">
+
+        {% for event in featured_events %}
+
+            <article
+                class="home-event-card
+                {% if event.places_remaining <= 0 %}home-event-card-sold-out{% endif %}
+                {% if event.is_special %}home-event-card-special{% endif %}"
+            >
+
+                {% if event.image %}
+
+                    <div class="home-event-card-image">
+
+                        <img
+                            src="{{ event.image.url }}"
+                            alt="{{ event.name }}"
+                        >
+
+                    </div>
+
+                {% else %}
+
+                    <div class="home-event-card-image home-event-card-placeholder">
+
+                        <span>
+                            Event Horizon
+                        </span>
+
+                    </div>
+
+                {% endif %}
+
+
+                <div class="home-event-card-content">
+
+                    {% if event.is_special %}
+
+                        <span class="home-event-special-label">
+                            Not for the faint of heart
+                        </span>
+
+                    {% endif %}
+
+
+                    <p class="event-category">
+                        {{ event.category.name }}
+                    </p>
+
+
+                    <h3>
+                        {{ event.name }}
+                    </h3>
+
+
+                    <p class="home-event-date">
+                        {{ event.date|date:"j F Y" }}
+                    </p>
+
+
+                    <p class="home-event-description">
+                        {{ event.description|truncatewords:24 }}
+                    </p>
+
+
+                    <div class="home-event-card-footer">
+
+                        <span class="home-event-price">
+                            £{{ event.price }}
+                        </span>
+
+
+                        {% if event.places_remaining <= 0 %}
+
+                            <span class="home-event-status home-event-status-sold-out">
+                                Sold Out
+                            </span>
+
+                        {% else %}
+
+                            <span class="home-event-status">
+                                {{ event.places_remaining }} place{{ event.places_remaining|pluralize }} left
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <a
+                        href="{% url 'event_detail' event.id %}"
+                        class="event-view-button"
+                    >
+                        View Event
+                    </a>
+
+                </div>
+
+            </article>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div class="home-section-action">
+
+        <a
+            href="{% url 'event_list' %}"
+            class="event-view-button"
+        >
+            View All Events
+        </a>
+
+    </div>
+
+</section>
+
+{% endif %}
+
+
+<section class="home-discover-section">
+
+    <div class="home-discover-content">
+
+        <p class="home-eyebrow">
+            THERE'S ALWAYS SOMETHING HAPPENING
+        </p>
+
+        <h2>
+            Find Something Worth Remembering
+        </h2>
+
+        <p>
+            Whether you're looking to learn something new, discover
+            somewhere different, hear some live music, or deliberately
+            make questionable decisions, there's an experience waiting
+            for you.
+        </p>
+
+        <a
+            href="{% url 'event_list' %}"
+            class="event-view-button"
+        >
+            Discover Events
+        </a>
+
+    </div>
+
+</section>
+
 {% endblock %}

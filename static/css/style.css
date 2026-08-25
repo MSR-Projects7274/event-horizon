@@ -1,7 +1,4 @@
-/* =========================================
-   EVENT HORIZON
-   Global foundation
-   ========================================= */
+/* EVENT HORIZON Global foundation*/
 
 :root {
     --eh-night: #171923;
@@ -268,6 +265,378 @@ footer {
 .logout-button:hover {
     background-color: var(--eh-accent-dark);
     transform: translateY(-1px);
+}
+
+/* HOME PAGE */
+
+.home-hero {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 2rem;
+    text-align: center;
+}
+
+.home-hero-content {
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+.home-eyebrow {
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.home-hero h1 {
+    margin-bottom: 1.5rem;
+    font-size: clamp(3.5rem, 9vw, 7rem);
+    line-height: 0.95;
+}
+
+.home-hero-text {
+    max-width: 650px;
+    margin: 0 auto 2rem;
+    font-size: 1.15rem;
+    line-height: 1.8;
+}
+
+
+/* HOME SECTION HEADINGS */
+
+.home-section-heading {
+    max-width: 1100px;
+    margin: 0 auto 2.5rem;
+    padding: 0 2rem;
+}
+
+.home-section-heading h2 {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+
+/* UPCOMING EVENTS TICKER */
+
+.home-ticker-section {
+    padding: 3rem 0 5rem;
+    overflow: hidden;
+}
+
+.event-ticker {
+    width: 100%;
+    overflow: hidden;
+    border-top: 1px solid rgba(128, 128, 128, 0.25);
+    border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+}
+
+.event-ticker-track {
+    display: flex;
+    width: max-content;
+    animation: eventTickerScroll 120s linear infinite;
+}
+
+.event-ticker:hover .event-ticker-track {
+    animation-play-state: paused;
+}
+
+.event-ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 2rem;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.ticker-event-name {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ticker-event-date {
+    font-size: 0.9rem;
+    opacity: 0.65;
+}
+
+.ticker-divider {
+    font-size: 1.25rem;
+    opacity: 0.5;
+}
+
+.event-ticker-item:hover {
+    text-decoration: none;
+}
+
+@keyframes eventTickerScroll {
+
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+
+}
+
+
+/* =========================================================
+   FEATURED EVENTS
+   ========================================================= */
+
+.home-featured-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+}
+
+.home-event-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.home-event-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: 10px;
+    background: var(
+        --card-background,
+        rgba(128, 128, 128, 0.08)
+    );
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+}
+
+.home-event-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(128, 128, 128, 0.45);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+
+/* =========================================================
+   CARD IMAGE
+   ========================================================= */
+
+.home-event-card-image {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+}
+
+.home-event-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.home-event-card:hover .home-event-card-image img {
+    transform: scale(1.04);
+}
+
+
+/* =========================================================
+   CARD CONTENT
+   ========================================================= */
+
+.home-event-card-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 1.5rem;
+}
+
+.home-event-card-content .event-category {
+    margin-bottom: 0.6rem;
+}
+
+.home-event-card-content h3 {
+    margin-bottom: 0.75rem;
+    line-height: 1.25;
+}
+
+.home-event-date {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.7;
+}
+
+.home-event-description {
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+
+.home-event-card .event-view-button {
+    align-self: flex-start;
+    margin-top: auto;
+}
+
+.home-section-action {
+    margin-top: 3rem;
+    text-align: center;
+}
+
+/*
+   IMAGE PLACEHOLDER */
+
+.home-event-card-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.home-event-card-placeholder span {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.45;
+}
+
+/* =========================================================
+   HOMEPAGE EVENT STATUS
+   ========================================================= */
+
+.home-event-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.home-event-price {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.home-event-status {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+}
+
+.home-event-status-sold-out {
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   SPECIAL EVENTS
+   ========================================================= */
+
+.home-event-special-label {
+    display: inline-block;
+    align-self: flex-start;
+    margin-bottom: 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.home-event-card-special {
+    position: relative;
+}
+
+
+/* =========================================================
+   SOLD OUT EVENTS
+   ========================================================= */
+
+.home-event-card-sold-out {
+    opacity: 0.7;
+}
+
+.home-event-card-sold-out:hover {
+    opacity: 0.85;
+}
+
+
+/* =========================================================
+   SPECIAL EVENT GLITCH EFFECT
+   ========================================================= */
+
+.home-event-card-special .home-event-card-content {
+    position: relative;
+}
+
+.home-event-card-special h3 {
+    transition: transform 0.2s ease;
+}
+
+.home-event-card-special:hover h3 {
+    transform: translateX(2px);
+}
+
+.home-event-card-special .home-event-special-label {
+    animation: specialLabelFlicker 4s infinite;
+}
+
+@keyframes specialLabelFlicker {
+
+    0%,
+    92%,
+    100% {
+        opacity: 0.7;
+        transform: translateX(0);
+    }
+
+    93% {
+        opacity: 0.3;
+        transform: translateX(-1px);
+    }
+
+    94% {
+        opacity: 0.9;
+        transform: translateX(1px);
+    }
+
+    95% {
+        opacity: 0.4;
+        transform: translateX(0);
+    }
+
+}
+
+/* =========================================================
+   DISCOVER SECTION
+   ========================================================= */
+
+.home-discover-section {
+    padding: 6rem 2rem;
+    text-align: center;
+}
+
+.home-discover-content {
+    max-width: 750px;
+    margin: 0 auto;
+}
+
+.home-discover-content h2 {
+    margin-bottom: 1.5rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+.home-discover-content p:not(.home-eyebrow) {
+    margin-bottom: 2rem;
+    line-height: 1.8;
 }
 
 /* Events page */
@@ -868,6 +1237,79 @@ footer {
 
     .search-input-wrapper button {
         width: 100%;
+    }
+
+}
+
+/* HOME PAGE RESPONSIVE STYLES */
+
+@media (max-width: 900px) {
+
+    .home-event-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+/* =========================================================
+   RESPONSIVE HOMEPAGE CARDS
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .home-event-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .home-featured-section {
+        padding: 4rem 1.5rem;
+    }
+
+    .home-event-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .home-hero {
+        min-height: 60vh;
+        padding: 4rem 1.5rem;
+    }
+
+    .home-hero-text {
+        font-size: 1rem;
+    }
+
+    .home-section-heading {
+        padding: 0 1.5rem;
+    }
+
+    .home-featured-section {
+        padding: 4rem 1.5rem;
+    }
+
+    .home-event-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .event-ticker-track {
+        animation-duration: 120s;
+    }
+
+    .event-ticker-item {
+        padding: 1rem 1.25rem;
+    }
+
+    .home-discover-section {
+        padding: 4rem 1.5rem;
     }
 
 }
