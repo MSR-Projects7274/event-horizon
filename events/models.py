@@ -87,9 +87,20 @@ class Booking(models.Model):
         related_name='bookings'
     )
 
-    quantity = models.PositiveIntegerField(default=1)
+    quantity = models.PositiveIntegerField(
+        default=1
+    )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    stripe_session_id = models.CharField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
     def __str__(self):
         return f"{self.user.username} - {self.event.name}"

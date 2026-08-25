@@ -22,13 +22,15 @@
             <strong>{{ event.places_remaining }}</strong> places remaining.
         </p>
 
-        <form method="POST">
+        <form
+            method="POST"
+            action="{% url 'create_checkout_session' event.id %}">
             {% csrf_token %}
 
             {{ form.as_p }}
 
             <button type="submit">
-                Confirm Booking
+                Proceed to Payment
             </button>
         </form>
 

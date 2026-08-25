@@ -64,18 +64,18 @@ def event_detail(request, event_id):
 
 @login_required
 def book_event(request, event_id):
-    """Allow an authenticated user to book places at an event."""
+    """Validate a booking request before sending the user to Stripe."""
 
     event = get_object_or_404(
         Event,
         id=event_id,
-        active=True
+        active=True,
     )
 
     if event.places_remaining <= 0:
         return redirect(
             'event_detail',
-            event_id=event.id
+            event_id=event.id,
         )
 
     if request.method == 'POST':
@@ -92,14 +92,9 @@ def book_event(request, event_id):
                 )
 
             else:
-                booking = form.save(commit=False)
-                booking.user = request.user
-                booking.event = event
-                booking.save()
-
                 return redirect(
-                    'event_detail',
-                    event_id=event.id
+                    'create_checkout_session',
+                    event_id=event.id,
                 )
 
     else:
@@ -113,7 +108,6 @@ def book_event(request, event_id):
             'form': form,
         }
     )
-
 
 @login_required
 def cancel_booking(request, booking_id):
