@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}About | Event Horizon{% endblock %}
+
+{% block content %}
+
+<section class="about-page">
+
+    <div class="about-hero">
+
+        <p class="home-eyebrow">
+            ABOUT EVENT HORIZON
+        </p>
+
+        <h1>
+            Experiences Beyond the Ordinary
+        </h1>
+
+        <p class="about-intro">
+            Event Horizon is a place to discover something different.
+            From creative workshops and live performances to food,
+            culture, and experiences worth remembering, there's always
+            something waiting just beyond the horizon.
+        </p>
+
+    </div>
+
+
+    <div class="about-section">
+
+        <h2>
+            What is Event Horizon?
+        </h2>
+
+        <p>
+            Event Horizon brings together a collection of events and
+            experiences designed to give people something to look forward
+            to. Whether you're trying something completely new, heading
+            out with friends, or simply looking for something different
+            to do, our events are built around discovering new
+            experiences.
+        </p>
+
+        <p>
+            Our events range from relaxed evenings and creative
+            activities to food, music, and more unusual experiences.
+            There's no single definition of what belongs here.
+            If it's worth experiencing, it belongs on the horizon.
+        </p>
+
+    </div>
+
+
+    <div class="about-section">
+
+        <h2>
+            Something for Everyone
+        </h2>
+
+        <div class="about-feature-grid">
+
+            <article class="about-feature">
+
+                <h3>
+                    Create
+                </h3>
+
+                <p>
+                    Get hands-on with workshops and activities designed
+                    to let you learn something new and make something
+                    of your own.
+                </p>
+
+            </article>
+
+
+            <article class="about-feature">
+
+                <h3>
+                    Discover
+                </h3>
+
+                <p>
+                    Explore new places, flavours, ideas, and experiences
+                    through events designed to take you somewhere
+                    different.
+                </p>
+
+            </article>
+
+
+            <article class="about-feature">
+
+                <h3>
+                    Connect
+                </h3>
+
+                <p>
+                    Enjoy live performances, shared experiences, and
+                    events that give people a reason to get together.
+                </p>
+
+            </article>
+
+        </div>
+
+    </div>
+
+
+    <div class="about-section">
+
+        <h2>
+            How It Works
+        </h2>
+
+        <div class="about-steps">
+
+            <div class="about-step">
+
+                <span class="about-step-number">
+                    01
+                </span>
+
+                <h3>
+                    Find an Event
+                </h3>
+
+                <p>
+                    Browse our upcoming events and find something that
+                    catches your attention.
+                </p>
+
+            </div>
+
+
+            <div class="about-step">
+
+                <span class="about-step-number">
+                    02
+                </span>
+
+                <h3>
+                    Book Your Place
+                </h3>
+
+                <p>
+                    Choose how many places you'd like and complete your
+                    booking securely through Stripe.
+                </p>
+
+            </div>
+
+
+            <div class="about-step">
+
+                <span class="about-step-number">
+                    03
+                </span>
+
+                <h3>
+                    Enjoy the Experience
+                </h3>
+
+                <p>
+                    Turn up, settle in, and enjoy whatever you've chosen
+                    to discover.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="about-final">
+
+        <h2>
+            There's Always Something Ahead
+        </h2>
+
+        <p>
+            New events are added regularly, so if you don't see
+            something for you today, check back soon.
+        </p>
+
+        <a
+            href="{% url 'event_list' %}"
+            class="event-view-button"
+        >
+            Explore Events
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}

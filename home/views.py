@@ -27,3 +27,12 @@ def home(request):
             'featured_events': featured_events,
         },
     )
+
+
+def about(request):
+    """Display information about Event Horizon."""
+
+    return render(
+        request,
+        'home/about.html',
+    )
