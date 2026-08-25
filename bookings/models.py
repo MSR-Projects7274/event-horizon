@@ -1,3 +1,1 @@
-from django.db import models
-
-# Create your models here.
+# Booking models are currently defined in the events app.

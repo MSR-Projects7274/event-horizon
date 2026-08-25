@@ -52,12 +52,14 @@ class Event(models.Model):
 
     @property
     def places_booked(self):
-        """Return the number of places currently booked."""
+        """Return the number of currently booked places."""
 
         return sum(
-            booking.quantity
-            for booking in self.bookings.all()
+        booking.quantity
+        for booking in self.bookings.filter(
+            status='confirmed'
         )
+    )
 
 
     @property
@@ -74,6 +76,11 @@ class Event(models.Model):
     
 class Booking(models.Model):
     """A user's booking for an event."""
+
+    STATUS_CHOICES = [
+        ('confirmed', 'Confirmed'),
+        ('cancelled', 'Cancelled'),
+    ]
 
     user = models.ForeignKey(
         User,
@@ -98,9 +105,30 @@ class Booking(models.Model):
         blank=True,
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='confirmed'
     )
+
+    stripe_refund_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    cancelled_at = models.DateTimeField(
+        blank=True,
+        null=True
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def total_price(self):
+        """Return the total price for this booking."""
+
+        return self.event.price * self.quantity
 
     def __str__(self):
         return f"{self.user.username} - {self.event.name}"

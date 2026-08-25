@@ -2,10 +2,9 @@ import stripe
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import (get_object_or_404, redirect, render,)
 
-from events.models import Event
-
+from events.models import Event, Booking
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -89,4 +88,27 @@ def create_checkout_session(request, event_id):
 
     return redirect(
         checkout_session.url
+    )
+
+@login_required
+def booking_success(request):
+    """Display the booking confirmation after successful payment."""
+
+    session_id = request.GET.get('session_id')
+
+    if not session_id:
+        return redirect('event_list')
+
+    booking = get_object_or_404(
+        Booking,
+        stripe_session_id=session_id,
+        user=request.user,
+    )
+
+    return render(
+        request,
+        'bookings/booking_success.html',
+        {
+            'booking': booking,
+        }
     )

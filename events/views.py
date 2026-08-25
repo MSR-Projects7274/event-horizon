@@ -1,10 +1,15 @@
+import stripe
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.conf import settings
 
 from .forms import BookingForm
 from .models import Category, Event, Booking
 from django.db import models
+from django.utils import timezone
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def event_list(request):
     """Display active events with search and category filtering."""
@@ -111,7 +116,7 @@ def book_event(request, event_id):
 
 @login_required
 def cancel_booking(request, booking_id):
-    """Cancel a booking belonging to the logged-in user."""
+    """Cancel a booking and refund the customer through Stripe."""
 
     booking = get_object_or_404(
         Booking,
@@ -119,10 +124,61 @@ def cancel_booking(request, booking_id):
         user=request.user
     )
 
-    if request.method == 'POST':
-        booking.delete()
-
+    if booking.status == 'cancelled':
         return redirect('profile')
+
+    if request.method == 'POST':
+
+        try:
+            session = stripe.checkout.Session.retrieve(
+                booking.stripe_session_id
+            )
+
+            payment_intent = session.payment_intent
+
+            if not payment_intent:
+                return render(
+                    request,
+                    'events/cancel_booking.html',
+                    {
+                        'booking': booking,
+                        'error_message': (
+                            'Unable to find the payment for this booking. '
+                            'Please contact us before cancelling.'
+                        ),
+                    }
+                )
+
+            refund = stripe.Refund.create(
+                payment_intent=payment_intent
+            )
+
+            booking.status = 'cancelled'
+            booking.stripe_refund_id = refund.id
+            booking.cancelled_at = timezone.now()
+            booking.save(
+                update_fields=[
+                    'status',
+                    'stripe_refund_id',
+                    'cancelled_at',
+                ]
+            )
+
+            return redirect('profile')
+
+        except stripe.error.StripeError:
+            return render(
+                request,
+                'events/cancel_booking.html',
+                {
+                    'booking': booking,
+                    'error_message': (
+                        'We could not process your refund. '
+                        'Your booking has not been cancelled. '
+                        'Please try again or contact us.'
+                    ),
+                }
+            )
 
     return render(
         request,

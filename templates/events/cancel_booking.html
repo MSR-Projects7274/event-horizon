@@ -8,6 +8,12 @@
 
     <h1>Cancel Booking</h1>
 
+    {% if error_message %}
+        <div class="alert alert-danger">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
     <p>
         Are you sure you want to cancel your booking for:
     </p>
@@ -33,7 +39,18 @@
             {{ booking.quantity }}
         </p>
 
+        <p>
+            <strong>Total paid:</strong>
+            £{{ booking.total_price|floatformat:2 }}
+        </p>
+
     </div>
+
+    <p>
+        Cancelling this booking will refund
+        <strong>£{{ booking.total_price|floatformat:2 }}</strong>
+        to your original payment method.
+    </p>
 
     <div class="cancel-booking-actions">
 
@@ -47,7 +64,7 @@
                 type="submit"
                 class="cancel-button"
             >
-                Yes, Cancel Booking
+                Yes, Cancel & Refund
             </button>
         </form>
 
