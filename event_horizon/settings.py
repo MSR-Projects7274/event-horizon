@@ -192,6 +192,15 @@ AWS_DEFAULT_ACL = None
 
 MAILERS = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+        'OPTIONS': {
+            'host': 'smtp.resend.com',
+            'port': 587,
+            'username': 'resend',
+            'password': RESEND_API_KEY,
+            'use_tls': True,
+        },
     },
 }
+
+DEFAULT_FROM_EMAIL = 'Event Horizon <onboarding@resend.dev>'

@@ -1,8 +1,11 @@
 import stripe
 
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.conf import settings
+from django.template.loader import render_to_string
+from django.urls import reverse
 
 from .forms import BookingForm
 from .models import Category, Event, Booking
@@ -116,7 +119,9 @@ def book_event(request, event_id):
 
 @login_required
 def cancel_booking(request, booking_id):
-    """Cancel a booking and refund the customer through Stripe."""
+    """Cancel a booking, refund the customer through Stripe,
+    and send a cancellation email.
+    """
 
     booking = get_object_or_404(
         Booking,
@@ -156,6 +161,7 @@ def cancel_booking(request, booking_id):
             booking.status = 'cancelled'
             booking.stripe_refund_id = refund.id
             booking.cancelled_at = timezone.now()
+
             booking.save(
                 update_fields=[
                     'status',
@@ -163,6 +169,53 @@ def cancel_booking(request, booking_id):
                     'cancelled_at',
                 ]
             )
+
+            # --------------------------------------------------
+            # Send cancellation email
+            # --------------------------------------------------
+
+            customer_email = request.user.email
+
+            if customer_email:
+                total_price = booking.total_price
+
+                email_context = {
+                    'booking': booking,
+                    'event': booking.event,
+                    'quantity': booking.quantity,
+                    'total_price': total_price,
+                    'refund': refund,
+                    'bookings_url': request.build_absolute_uri(
+                        reverse('profile')
+                    ),
+                }
+
+                html_message = render_to_string(
+                    'emails/booking_cancellation.html',
+                    email_context,
+                )
+
+                plain_message = (
+                    f'Your Event Horizon booking has been cancelled.\n\n'
+                    f'Event: {booking.event.name}\n'
+                    f'Date: {booking.event.date:%d %B %Y}\n'
+                    f'Time: {booking.event.time:%H:%M}\n'
+                    f'Location: {booking.event.location}\n'
+                    f'Places: {booking.quantity}\n\n'
+                    f'Refund amount: £{total_price:.2f}\n'
+                    f'Refund reference: {refund.id}\n\n'
+                    'Your booking has been cancelled and your refund '
+                    'has been requested through Stripe.\n\n'
+                    'Thank you for choosing Event Horizon.'
+                )
+
+                send_mail(
+                    subject='Your Event Horizon booking has been cancelled',
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[customer_email],
+                    html_message=html_message,
+                )
 
             return redirect('profile')
 
