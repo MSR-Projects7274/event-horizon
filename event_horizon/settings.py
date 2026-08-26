@@ -172,6 +172,10 @@ STRIPE_PUBLIC_KEY = env('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
 STRIPE_WH_SECRET = env('STRIPE_WH_SECRET', default='')
 
+# Resend Environment Variables
+
+RESEND_API_KEY = env('RESEND_API_KEY')
+
 # AWS Environment Variables
 
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')

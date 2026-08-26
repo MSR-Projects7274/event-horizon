@@ -49,7 +49,8 @@ def create_checkout_session(request, event_id):
     )
 
     checkout_session = stripe.checkout.Session.create(
-        mode='payment',
+    mode='payment',
+    customer_email=request.user.email,
 
         line_items=[
             {
@@ -58,7 +59,11 @@ def create_checkout_session(request, event_id):
 
                     'product_data': {
                         'name': event.name,
-                        'description': event.description,
+                        'description': (
+                            f'{event.date:%d %B %Y} at '
+                            f'{event.time:%H:%M} • '
+                            f'{event.location}'
+                        ),
                     },
 
                     'unit_amount': amount,
