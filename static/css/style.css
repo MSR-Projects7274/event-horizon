@@ -877,6 +877,87 @@ footer {
     opacity: 0.7;
 }
 
+/* ----------------------------------------
+   Special Event
+   ---------------------------------------- */
+
+.special-event {
+    position: relative;
+}
+
+
+/* Special event title */
+
+.special-event .event-detail-content h1 {
+    position: relative;
+    animation: special-title-glitch 6s infinite;
+}
+
+@keyframes special-title-glitch {
+
+    0%,
+    78%,
+    100% {
+        transform: translateX(0);
+    }
+
+    79% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(4px);
+    }
+
+    81% {
+        transform: translateX(-2px);
+    }
+
+    82% {
+        transform: translateX(0);
+    }
+
+    83% {
+        transform: translateX(3px);
+    }
+
+    84% {
+        transform: translateX(0);
+    }
+}
+
+
+/* Special event image */
+
+.special-image-container {
+    overflow: visible;
+}
+
+.special-event-image {
+    transition: transform 0.15s ease-out;
+}
+
+
+/* Special event text */
+
+.special-event-whisper {
+    min-height: 1.5em;
+    margin-top: -1rem;
+    margin-bottom: 2rem;
+
+    font-size: 0.9rem;
+    font-style: italic;
+    opacity: 0.65;
+}
+
+/* Special booking button */
+
+.special-book-button {
+    transition:
+        background-color var(--eh-transition),
+        border-color var(--eh-transition),
+        transform var(--eh-transition);
+}
 
 /* Category filtering */
 

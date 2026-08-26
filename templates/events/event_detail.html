@@ -4,13 +4,14 @@
 
 {% block content %}
 
-<section class="event-detail">
+<section class="event-detail {% if event.is_special %}special-event{% endif %}">
 
-    <div class="event-detail-image">
+    <div class="event-detail-image {% if event.is_special %}special-image-container{% endif %}">
         {% if event.image %}
             <img
                 src="{{ event.image.url }}"
                 alt="{{ event.name }}"
+                class="{% if event.is_special %}special-event-image{% endif %}"
             >
         {% endif %}
     </div>
@@ -26,6 +27,13 @@
         <p class="event-description">
             {{ event.description }}
         </p>
+
+        {% if event.is_special %}
+        <p
+            class="special-event-whisper"
+            aria-live="polite">
+        </p>
+        {% endif %}
 
         <div class="event-information">
 
@@ -58,15 +66,31 @@
 
         {% if event.places_remaining > 0 %}
 
-        <a href="{% url 'book_event' event.id %}" class="event-book-button">
-            Book Now
-        </a>
+            {% if event.is_special %}
+
+                <a
+                    href="{% url 'book_event' event.id %}"
+                    class="event-book-button special-book-button"
+                >
+                    Book Now
+                </a>
+
+            {% else %}
+
+                <a
+                    href="{% url 'book_event' event.id %}"
+                    class="event-book-button"
+                >
+                    Book Now
+                </a>
+
+            {% endif %}
 
         {% else %}
 
-        <span class="event-book-button sold-out-button">
-            Sold Out
-        </span>
+            <span class="event-book-button sold-out-button">
+                Sold Out
+            </span>
 
         {% endif %}
 
