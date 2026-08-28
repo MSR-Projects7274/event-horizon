@@ -36,9 +36,7 @@ def stripe_webhook(request):
     except stripe.error.SignatureVerificationError:
         return HttpResponse(status=400)
 
-    # --------------------------------------------------
     # Only process completed Checkout Sessions
-    # --------------------------------------------------
 
     if stripe_event['type'] != 'checkout.session.completed':
         return HttpResponse(status=200)
@@ -49,16 +47,12 @@ def stripe_webhook(request):
 
     customer_email = customer_details.get('email')
 
-    # --------------------------------------------------
     # Make sure the payment was successful
-    # --------------------------------------------------
 
     if session.payment_status != 'paid':
         return HttpResponse(status=200)
 
-    # --------------------------------------------------
     # Retrieve booking information
-    # --------------------------------------------------
 
     metadata = session.metadata.to_dict()
 
@@ -77,27 +71,21 @@ def stripe_webhook(request):
     if quantity < 1:
         return HttpResponse(status=400)
 
-    # --------------------------------------------------
     # Stripe Checkout Session ID
-    # --------------------------------------------------
 
     session_id = session.id
 
     if not session_id:
         return HttpResponse(status=400)
 
-    # --------------------------------------------------
     # Prevent duplicate bookings
-    # --------------------------------------------------
 
     if Booking.objects.filter(
         stripe_session_id=session_id
     ).exists():
         return HttpResponse(status=200)
 
-    # --------------------------------------------------
     # Check capacity and create booking
-    # --------------------------------------------------
 
     try:
 
@@ -121,9 +109,7 @@ def stripe_webhook(request):
     except Event.DoesNotExist:
         return HttpResponse(status=400)
 
-    # --------------------------------------------------
     # Send booking confirmation email
-    # --------------------------------------------------
 
     if customer_email:
         total_price = event.price * quantity

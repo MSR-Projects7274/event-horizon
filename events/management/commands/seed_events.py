@@ -7,10 +7,9 @@ from django.utils import timezone
 
 from events.models import Category, Event
 
-
-# =========================================================
 # DESCRIPTION GENERATORS
-# =========================================================
+
+# BASE CODE BY MYSELF, FULLY IMPLEMENTED BY CHATGPT
 
 DESCRIPTION_DATA = {
 
@@ -775,15 +774,11 @@ def generate_description(category):
     return " ".join(unique_sentences)
 
 
-# =========================================================
 # EVENT CATALOGUE
-# =========================================================
 
 EVENT_DATA = [
 
-    # ---------------------------------------------------------
     # ADVENTURE
-    # ---------------------------------------------------------
 
     {
         "category": "Adventure",
@@ -876,9 +871,7 @@ EVENT_DATA = [
         "is_special": False,
     },
 
-    # ---------------------------------------------------------
     # ARTS & CULTURE
-    # ---------------------------------------------------------
 
     {
         "category": "Arts & Culture",
@@ -971,9 +964,7 @@ EVENT_DATA = [
         "is_special": False,
     },
 
-    # ---------------------------------------------------------
     # FAMILY
-    # ---------------------------------------------------------
 
     {
         "category": "Family",
@@ -1066,9 +1057,7 @@ EVENT_DATA = [
         "is_special": False,
     },
 
-    # ---------------------------------------------------------
     # FOOD & DRINK
-    # ---------------------------------------------------------
 
     {
         "category": "Food & Drink",
@@ -1161,9 +1150,7 @@ EVENT_DATA = [
         "is_special": False,
     },
 
-    # ---------------------------------------------------------
     # MUSIC & ENTERTAINMENT
-    # ---------------------------------------------------------
 
     {
         "category": "Music & Entertainment",
@@ -1256,9 +1243,7 @@ EVENT_DATA = [
         "is_special": False,
     },
 
-    # ---------------------------------------------------------
     # WORKSHOPS
-    # ---------------------------------------------------------
 
     {
         "category": "Workshops",
@@ -1351,9 +1336,7 @@ EVENT_DATA = [
         "is_special": False,
     },
 
-    # ---------------------------------------------------------
     # NOT FOR THE FAINT OF HEART
-    # ---------------------------------------------------------
 
     {
         "category": "Not For the Faint of Heart",
@@ -1448,9 +1431,7 @@ EVENT_DATA = [
 ]
 
 
-# =========================================================
 # MANAGEMENT COMMAND
-# =========================================================
 
 class Command(BaseCommand):
     help = "Create a collection of sample events for Event Horizon."
@@ -1513,10 +1494,8 @@ class Command(BaseCommand):
 
         selected_events = []
 
-        # ---------------------------------------------------------
         # Choose events without repeating until the catalogue
         # has been exhausted.
-        # ---------------------------------------------------------
 
         if count <= len(EVENT_DATA):
 
@@ -1578,9 +1557,7 @@ class Command(BaseCommand):
 
                 remaining -= take
 
-        # ---------------------------------------------------------
         # Create the events.
-        # ---------------------------------------------------------
 
         start_date = timezone.localdate() + timedelta(days=7)
 

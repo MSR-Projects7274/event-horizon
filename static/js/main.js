@@ -1,6 +1,4 @@
-/* ----------------------------------------
-   Special Event Behaviour
-   ---------------------------------------- */
+/* Special Event Behaviour */
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -17,9 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    /* ----------------------------------------
-       Special Event Image
-       ---------------------------------------- */
+    /* Special Event Image */
 
     const imageContainer =
         document.querySelector('.special-image-container');
@@ -59,9 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    /* ----------------------------------------
-    Special Event Whisper
-    ---------------------------------------- */
+    /* Special Event Whisper */
 
     const whisper =
         document.querySelector('.special-event-whisper');
@@ -86,9 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let currentMessage = '';
 
 
-        /* ----------------------------------------
-        Pick a message
-        ---------------------------------------- */
+        /* Pick a Message */
 
         function getRandomMessage() {
 
@@ -113,9 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        /* ----------------------------------------
-        Type message
-        ---------------------------------------- */
+        /* Type Message */
 
         function typeMessage(message) {
 
@@ -155,9 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        /* ----------------------------------------
-        Erase message
-        ---------------------------------------- */
+        /* Erase Message */
 
         function eraseMessage(message) {
 
@@ -197,9 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        /* ----------------------------------------
-        Start the next message
-        ---------------------------------------- */
+        /* Start the next message */
 
         function startNextMessage() {
 
@@ -210,9 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        /* ----------------------------------------
-        First message
-        ---------------------------------------- */
+        /* First message */
 
         setTimeout(function () {
 
@@ -222,9 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
   
-    /* ----------------------------------------
-       Special Booking Button
-       ---------------------------------------- */
+    /* Special Booking Button */
 
     const specialBookButton =
         document.querySelector('.special-book-button');

@@ -170,9 +170,7 @@ def cancel_booking(request, booking_id):
                 ]
             )
 
-            # --------------------------------------------------
             # Send cancellation email
-            # --------------------------------------------------
 
             customer_email = request.user.email
 

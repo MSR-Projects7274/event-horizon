@@ -1,4 +1,4 @@
-/* EVENT HORIZON Global foundation*/
+/* Event Horizon Global Foundation */
 
 :root {
     --eh-night: #171923;
@@ -110,7 +110,7 @@ footer {
     border-top: 1px solid var(--eh-night-soft);
 }
 
-/* Site search */
+/* Site Search */
 
 .site-search {
     max-width: 1200px;
@@ -162,7 +162,7 @@ footer {
     background-color: var(--eh-accent-dark);
     transform: translateY(-1px);
 }
-/* Main navigation */
+/* Main Navigation */
 
 .main-nav {
     display: grid;
@@ -225,7 +225,7 @@ footer {
     gap: 1rem;
 }
 
-/* Logged-in user area */
+/* Logged-in User Area */
 
 .user-menu {
     display: flex;
@@ -267,7 +267,7 @@ footer {
     transform: translateY(-1px);
 }
 
-/* HOME PAGE */
+/* Home Page */
 
 .home-hero {
     min-height: 70vh;
@@ -306,7 +306,7 @@ footer {
 }
 
 
-/* HOME SECTION HEADINGS */
+/* Home Section Headings */
 
 .home-section-heading {
     max-width: 1100px;
@@ -320,7 +320,7 @@ footer {
 }
 
 
-/* UPCOMING EVENTS TICKER */
+/* Upcoming Events Ticker */
 
 .home-ticker-section {
     padding: 3rem 0 5rem;
@@ -386,7 +386,7 @@ footer {
 }
 
 
-/* FEATURED EVENTS */
+/* Featured Events */
 
 .home-featured-section {
     max-width: 1200px;
@@ -424,7 +424,7 @@ footer {
 }
 
 
-/* CARD IMAGE */
+/* Card Image */
 
 .home-event-card-image {
     aspect-ratio: 16 / 10;
@@ -443,7 +443,7 @@ footer {
 }
 
 
-/* CARD CONTENT */
+/* Card Content */
 
 .home-event-card-content {
     display: flex;
@@ -483,8 +483,7 @@ footer {
     text-align: center;
 }
 
-/*
-   IMAGE PLACEHOLDER */
+/* Image Placeholder */
 
 .home-event-card-placeholder {
     display: flex;
@@ -501,7 +500,7 @@ footer {
     opacity: 0.45;
 }
 
-/* HOMEPAGE EVENT STATUS */
+/* Homepage Event Status */
 
 .home-event-card-footer {
     display: flex;
@@ -529,7 +528,7 @@ footer {
 }
 
 
-/* SPECIAL EVENTS */
+/* Special Events */
 
 .home-event-special-label {
     display: inline-block;
@@ -546,7 +545,7 @@ footer {
 }
 
 
-/* SOLD OUT EVENTS */
+/* Sold Out Events */
 
 .home-event-card-sold-out {
     opacity: 0.7;
@@ -557,7 +556,7 @@ footer {
 }
 
 
-/* SPECIAL EVENT GLITCH EFFECT */
+/* Special Event Glitch Effect */
 
 .home-event-card-special .home-event-card-content {
     position: relative;
@@ -601,7 +600,7 @@ footer {
 
 }
 
-/* DISCOVER SECTION */
+/* Discover Section */
 
 .home-discover-section {
     padding: 6rem 2rem;
@@ -623,7 +622,7 @@ footer {
     line-height: 1.8;
 }
 
-/* Events page */
+/* Events Page */
 
 .events-page {
     max-width: 1200px;
@@ -642,7 +641,7 @@ footer {
     margin-top: 0;
 }
 
-/* Event grid */
+/* Event Grid */
 
 .event-grid {
     display: grid;
@@ -650,7 +649,7 @@ footer {
     gap: 2rem;
 }
 
-/* Event cards */
+/* Event Cards */
 
 .event-card {
     background-color: var(--eh-surface);
@@ -784,7 +783,7 @@ footer {
     transform: rotate(-8deg);
 }
 
-/* Event detail page */
+/* Event Detail Page */
 
 .event-detail {
     max-width: 1100px;
@@ -877,16 +876,14 @@ footer {
     opacity: 0.7;
 }
 
-/* ----------------------------------------
-   Special Event
-   ---------------------------------------- */
+/* Special Event */
 
 .special-event {
     position: relative;
 }
 
 
-/* Special event title */
+/* Special Event Title */
 
 .special-event .event-detail-content h1 {
     position: relative;
@@ -927,7 +924,7 @@ footer {
 }
 
 
-/* Special event image */
+/* Special Event Image */
 
 .special-image-container {
     overflow: visible;
@@ -938,7 +935,7 @@ footer {
 }
 
 
-/* Special event text */
+/* Special Event Text */
 
 .special-event-whisper {
     min-height: 1.5em;
@@ -950,7 +947,7 @@ footer {
     opacity: 0.65;
 }
 
-/* Special booking button */
+/* Special Booking Button */
 
 .special-book-button {
     transition:
@@ -959,7 +956,7 @@ footer {
         transform var(--eh-transition);
 }
 
-/* Category filtering */
+/* Category Filtering */
 
 .category-filter {
     display: flex;
@@ -1140,6 +1137,7 @@ footer {
 }
 
 /* Cancelled Booking */
+
 .booking-card-cancelled {
     opacity: 0.65;
     filter: grayscale(0.45);
@@ -1186,7 +1184,7 @@ footer {
     font-size: 0.9rem;
 }
 
-/* Booking Success Page*/
+/* Booking Success Page */
 
 .booking-success-page {
     min-height: 70vh;
@@ -1263,7 +1261,7 @@ footer {
     flex-wrap: wrap;
 }
 
-/* ABOUT PAGE */
+/* About Page */
 
 .about-page {
     max-width: 1100px;
@@ -1292,7 +1290,7 @@ footer {
 }
 
 
-/* ABOUT SECTIONS */
+/* About Sections */
 
 .about-section {
     margin-bottom: 6rem;
@@ -1309,7 +1307,7 @@ footer {
 }
 
 
-/* ABOUT FEATURES */
+/* About Features */
 
 .about-feature-grid {
     display: grid;
@@ -1334,7 +1332,7 @@ footer {
 }
 
 
-/* ABOUT STEPS */
+/* About Steps */
 
 .about-steps {
     display: grid;
@@ -1366,7 +1364,7 @@ footer {
 }
 
 
-/* ABOUT FINAL SECTION */
+/* About Final Section */
 
 .about-final {
     padding: 5rem 2rem;
@@ -1428,7 +1426,7 @@ footer {
 
 }
 
-/* HOME PAGE RESPONSIVE STYLES */
+/* Home Page Responsive Styles */
 
 @media (max-width: 900px) {
 
@@ -1438,7 +1436,7 @@ footer {
 
 }
 
-/* RESPONSIVE HOMEPAGE CARDS */
+/* Responsive Homepage Cards */
 
 @media (max-width: 900px) {
 
@@ -1541,7 +1539,7 @@ footer {
     }
 }
 
-/* ABOUT RESPONSIVE */
+/* About Responsive */
 
 @media (max-width: 800px) {
 
