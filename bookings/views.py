@@ -44,6 +44,9 @@ def create_checkout_session(request, event_id):
             event_id=event.id,
         )
 
+    if not request.user.email:
+        return redirect('edit_profile')
+
     amount = int(
         event.price * 100
     )
