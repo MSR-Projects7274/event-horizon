@@ -1638,6 +1638,34 @@ footer {
     }
 }
 
+/* Event Detail Mobile */
+@media (max-width: 600px) {
+
+    .event-detail {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        margin: 2rem auto;
+        text-align: center;
+    }
+
+    .event-detail-image {
+        width: 100%;
+    }
+
+    .event-detail-image img {
+        max-height: 400px;
+    }
+
+    .event-detail-content {
+        padding: 0;
+    }
+
+    .event-information div {
+        text-align: left;
+    }
+
+}
+
 /* About Responsive */
 
 @media (max-width: 800px) {
