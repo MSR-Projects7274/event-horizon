@@ -43,6 +43,11 @@ ALLOWED_HOSTS = os.environ.get(
     'localhost,127.0.0.1'
 ).split(',')
 
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS',
+    'http://localhost:8000'
+).split(',')
+
 
 # Application definition
 
@@ -170,7 +175,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 STRIPE_PUBLIC_KEY = env('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
-STRIPE_WH_SECRET = env('STRIPE_WH_SECRET', default='')
+STRIPE_WH_SECRET = env('STRIPE_WH_SECRET')
 
 # Resend Environment Variables
 
