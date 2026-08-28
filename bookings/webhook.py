@@ -114,38 +114,37 @@ def stripe_webhook(request):
     if customer_email:
         total_price = event.price * quantity
 
-    email_context = {
-        'event': event,
-        'quantity': quantity,
-        'total_price': total_price,
-        'bookings_url': request.build_absolute_uri(
-            reverse('profile')
-            ),
-    }
+        email_context = {
+            'event': event,
+            'quantity': quantity,
+            'total_price': total_price,
+            'bookings_url': request.build_absolute_uri(
+                reverse('profile')
+                ),
+        }
 
-    html_message = render_to_string(
-        'emails/booking_confirmation.html',
-        email_context,
-    )
+        html_message = render_to_string(
+            'emails/booking_confirmation.html',
+            email_context,
+        )
 
-    plain_message = (
-        f'Your booking for {event.name} is confirmed.\n\n'
-        f'Date: {event.date:%d %B %Y}\n'
-        f'Time: {event.time:%H:%M}\n'
-        f'Location: {event.location}\n'
-        f'Places: {quantity}\n'
-        f'Price per place: £{event.price:.2f}\n'
-        f'Total paid: £{total_price:.2f}\n\n'
-        'Thank you for booking with Event Horizon.\n\n'
-        'Discover experiences beyond the ordinary.'
-    )
+        plain_message = (
+            f'Your booking for {event.name} is confirmed.\n\n'
+            f'Date: {event.date:%d %B %Y}\n'
+            f'Time: {event.time:%H:%M}\n'
+            f'Location: {event.location}\n'
+            f'Places: {quantity}\n'
+            f'Price per place: £{event.price:.2f}\n'
+            f'Total paid: £{total_price:.2f}\n\n'
+            'Thank you for booking with Event Horizon.\n\n'
+            'Discover experiences beyond the ordinary.'
+        )
 
-    send_mail(
-        subject='Your Event Horizon booking is confirmed',
-        message=plain_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[customer_email],
-        html_message=html_message,
-    )
-
+        send_mail(
+            subject='Your Event Horizon booking is confirmed',
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[customer_email],
+            html_message=html_message,
+        )
     return HttpResponse(status=200)

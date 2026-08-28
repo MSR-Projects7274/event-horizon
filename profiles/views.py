@@ -79,34 +79,6 @@ def edit_profile(request):
     )
 
 @login_required
-def edit_profile(request):
-    """Allow the user to update their account details."""
-
-    if request.method == 'POST':
-        form = ProfileForm(
-            request.POST,
-            instance=request.user
-        )
-
-        if form.is_valid():
-            form.save()
-
-            return redirect('profile')
-
-    else:
-        form = ProfileForm(
-            instance=request.user
-        )
-
-    return render(
-        request,
-        'profiles/edit_profile.html',
-        {
-            'form': form,
-        }
-    )
-
-@login_required
 def change_password(request):
     """Allow the user to change their password."""
 

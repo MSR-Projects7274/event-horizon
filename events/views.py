@@ -35,7 +35,8 @@ def event_list(request):
         events = events.filter(category_id=category_id)
 
     return render(
-        request,'events/event_list.html',
+        request,
+        'events/event_list.html',
         {
             'events': events,
             'categories': categories,
@@ -51,18 +52,8 @@ def event_detail(request, event_id):
     event = get_object_or_404(
         Event,
         id=event_id,
-        active=True
+        active=True,
     )
-
-    return render(
-        request,'events/event_detail.html',{'event': event}
-    )
-
-
-def event_detail(request, event_id):
-    """Display the details of a single event."""
-    event = get_object_or_404(
-        Event, id=event_id, active=True)
 
     return render(
         request,
