@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /* Pick a Message */
 
-        function getRandomMessage() {
+        const getRandomMessage = function () {
 
             let nextMessage;
 
@@ -95,25 +95,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     ];
             }
             while (
-                nextMessage === currentMessage
-                && whispers.length > 1
+                nextMessage === currentMessage &&
+                whispers.length > 1
             );
 
             currentMessage = nextMessage;
 
             return nextMessage;
-        }
+        };
 
 
         /* Type Message */
 
-        function typeMessage(message) {
+        const typeMessage = function (message) {
 
             whisper.textContent = '';
 
             let index = 0;
 
-            function typeNext() {
+            const typeNext = function () {
 
                 if (index >= message.length) {
 
@@ -139,19 +139,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     typeNext,
                     70
                 );
-            }
+            };
 
             typeNext();
-        }
+        };
 
 
         /* Erase Message */
 
-        function eraseMessage(message) {
+        const eraseMessage = function (message) {
 
             let index = message.length;
 
-            function eraseNext() {
+            const eraseNext = function () {
 
                 if (index <= 0) {
 
@@ -179,21 +179,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     eraseNext,
                     90
                 );
-            }
+            };
 
             eraseNext();
-        }
+        };
 
 
         /* Start the next message */
 
-        function startNextMessage() {
+        const startNextMessage = function () {
 
             const nextMessage =
                 getRandomMessage();
 
             typeMessage(nextMessage);
-        }
+        };
 
 
         /* First message */
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 3000);
 
     }
-  
+
     /* Special Booking Button */
 
     const specialBookButton =
