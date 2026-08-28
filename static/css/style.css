@@ -1690,14 +1690,17 @@ footer {
 
     .about-section {
         margin-bottom: 4rem;
+        text-align: center;
     }
 
     .about-feature {
         padding: 1.5rem;
+        text-align: center;
     }
 
     .about-final {
         padding: 4rem 1rem;
+        text-align: center;
     }
 
 }
