@@ -847,6 +847,49 @@ footer {
     font-weight: bold;
 }
 
+.auth-button {
+    display: inline-block;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--eh-night);
+    border-radius: var(--eh-radius-small);
+    background-color: var(--eh-night);
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition:
+        background-color var(--eh-transition),
+        border-color var(--eh-transition),
+        transform var(--eh-transition);
+}
+
+.auth-button:hover {
+    background-color: var(--eh-accent-dark);
+    border-color: var(--eh-accent-dark);
+    transform: translateY(-1px);
+}
+
+.auth-nav-button {
+    display: inline-block;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--eh-night);
+    border-radius: var(--eh-radius-small);
+    background-color: var(--eh-night);
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition:
+        background-color var(--eh-transition),
+        border-color var(--eh-transition),
+        transform var(--eh-transition);
+}
+
+.auth-nav-button:hover {
+    background-color: var(--eh-accent-dark);
+    border-color: var(--eh-accent-dark);
+    transform: translateY(-1px);
+}
+
 .event-book-button {
     display: inline-block;
     padding: 0.6rem 1rem;
