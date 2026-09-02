@@ -846,7 +846,7 @@ footer {
     max-height: 550px;
     object-fit: cover;
     display: block;
-    border-radius: 8px;
+    border-radius: var(--eh-radius);
 }
 
 .event-detail-content {
