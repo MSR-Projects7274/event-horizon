@@ -11,6 +11,9 @@ from .forms import ProfileForm
 def register(request):
     """Register a new user."""
 
+    if request.user.is_authenticated:
+        return redirect('home')
+
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
 
