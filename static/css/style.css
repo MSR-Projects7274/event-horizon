@@ -953,9 +953,6 @@ footer {
     background-color: var(--eh-accent-dark);
     border-color: var(--eh-accent-dark);
     transform: translateY(-1px);
-}
-
-.event-book-button:hover {
     opacity: 0.85;
 }
 
