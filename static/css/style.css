@@ -1330,7 +1330,6 @@ footer {
     background-color: var(--eh-surface);
     color: var(--eh-text);
     font: inherit;
-    box-sizing: border-box;
 }
 
 .booking-page form input:focus,
