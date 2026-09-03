@@ -129,10 +129,11 @@
     <div class="home-event-grid">
 
         {% for event in featured_events %}
+            {% with places_remaining=event.places_remaining %}
 
             <article
                 class="home-event-card
-                {% if event.places_remaining <= 0 %}home-event-card-sold-out{% endif %}
+                {% if places_remaining <= 0 %}home-event-card-sold-out{% endif %}
                 {% if event.is_special %}home-event-card-special{% endif %}"
             >
 
@@ -198,7 +199,7 @@
                         </span>
 
 
-                        {% if event.places_remaining <= 0 %}
+                        {% if places_remaining <= 0 %}
 
                             <span class="home-event-status home-event-status-sold-out">
                                 Sold Out
@@ -207,9 +208,8 @@
                         {% else %}
 
                             <span class="home-event-status">
-                                {{ event.places_remaining }} place{{ event.places_remaining|pluralize }} left
+                                {{ places_remaining }} place{{ places_remaining|pluralize }} left
                             </span>
-
                         {% endif %}
 
                     </div>
@@ -225,7 +225,7 @@
                 </div>
 
             </article>
-
+            {% endwith %}
         {% endfor %}
 
     </div>
