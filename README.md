@@ -12,6 +12,7 @@
 - [Built With](#built-with)
 - [Libraries Used](#libraries-used)
 - [Project Structure](#project-structure)
+- [Database Schema](#database-schema)
 - [Viewing the Site Locally](#viewing-the-site-locally)
 - [Deployment](#deployment)
 - [Accessibility & Responsiveness](#accessibility--responsiveness)
@@ -387,6 +388,193 @@ The main areas of the project include:
 
 - **Templates**  
   Contains the HTML templates used to render the site's pages.
+
+* * *
+
+# Database Schema
+
+Event Horizon uses Django's relational database system to store users, event categories, events and customer bookings.
+
+The project uses Django's built-in `User` model for authentication rather than defining a custom user model. Application-specific data is stored using the `Category`, `Event` and `Booking` models.
+
+## Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    USER ||--o{ BOOKING : makes
+    CATEGORY ||--o{ EVENT : contains
+    EVENT ||--o{ BOOKING : receives
+
+    USER {
+        bigint id PK
+        string username
+        string email
+        string password
+        string first_name
+        string last_name
+        boolean is_staff
+        boolean is_active
+        datetime date_joined
+    }
+
+    CATEGORY {
+        bigint id PK
+        string name
+    }
+
+    EVENT {
+        bigint id PK
+        bigint category_id FK
+        string name
+        text description
+        string location
+        date date
+        time time
+        decimal price
+        integer capacity
+        string image
+        boolean active
+        boolean is_special
+        datetime created_at
+        datetime updated_at
+    }
+
+    BOOKING {
+        bigint id PK
+        bigint user_id FK
+        bigint event_id FK
+        integer quantity
+        string stripe_session_id
+        string status
+        string stripe_refund_id
+        datetime cancelled_at
+        datetime created_at
+    }
+```
+
+## User
+
+User accounts are provided by Django's built-in authentication system.
+
+| Field                      | Purpose                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------- |
+| `id`                       | Primary key identifying the user.                                               |
+| `username`                 | Unique username used to identify the account.                                   |
+| `email`                    | Email address used by Event Horizon for booking and cancellation communication. |
+| `password`                 | Securely hashed account password managed by Django.                             |
+| `first_name` / `last_name` | Optional name information provided by Django's user model.                      |
+| `is_staff`                 | Determines whether the user can access Django administration functionality.     |
+| `is_active`                | Determines whether the account is active.                                       |
+| `date_joined`              | Records when the account was created.                                           |
+
+Django also manages authentication-related fields and relationships such as permissions and groups.
+
+## Category
+
+The `Category` model groups related events.
+
+| Field  | Type             | Purpose                     |
+| ------ | ---------------- | --------------------------- |
+| `id`   | `BigAutoField`   | Primary key.                |
+| `name` | `CharField(100)` | Name of the event category. |
+
+Categories are ordered alphabetically by name.
+
+### Relationship
+
+A category can contain **many events**, while each event belongs to **one category**.
+
+`Category to Event` is therefore a **one-to-many relationship**.
+
+The relationship uses `on_delete=models.CASCADE`, meaning deleting a category also deletes the events assigned to it.
+
+## Event
+
+The `Event` model stores the main event catalogue.
+
+| Field         | Type                   | Purpose                                                                        |
+| ------------- | ---------------------- | ------------------------------------------------------------------------------ |
+| `id`          | `BigAutoField`         | Primary key.                                                                   |
+| `category`    | `ForeignKey(Category)` | Category containing the event.                                                 |
+| `name`        | `CharField(200)`       | Event name.                                                                    |
+| `description` | `TextField`            | Full event description.                                                        |
+| `location`    | `CharField(255)`       | Event location.                                                                |
+| `date`        | `DateField`            | Date of the event.                                                             |
+| `time`        | `TimeField`            | Start time of the event.                                                       |
+| `price`       | `DecimalField(8, 2)`   | Price of one event place.                                                      |
+| `capacity`    | `PositiveIntegerField` | Maximum number of places available.                                            |
+| `image`       | `ImageField`           | Optional event image uploaded under `events/`.                                 |
+| `active`      | `BooleanField`         | Controls whether the event is available through the customer-facing catalogue. |
+| `is_special`  | `BooleanField`         | Identifies events receiving the special Event Horizon presentation.            |
+| `created_at`  | `DateTimeField`        | Timestamp created automatically when the event is added.                       |
+| `updated_at`  | `DateTimeField`        | Timestamp updated automatically whenever the event changes.                    |
+
+Events are ordered by date and then time.
+
+### Model Behaviour
+
+`places_booked` calculates the number of places occupied by bookings whose status is `confirmed`.
+
+`places_remaining` subtracts the confirmed booked places from the event capacity.
+
+These calculated properties allow event availability and sold-out behaviour to remain synchronized with booking records.
+
+### Relationships
+
+Each event belongs to **one category**, while a category can contain many events.
+
+An event can also have **many bookings**, while each booking relates to one event.
+
+Deleting an event currently cascades to its associated bookings.
+
+## Booking
+
+The `Booking` model connects a registered user to an event they have purchased places for.
+
+| Field               | Type                   | Purpose                                                                                            |
+| ------------------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
+| `id`                | `BigAutoField`         | Primary key.                                                                                       |
+| `user`              | `ForeignKey(User)`     | User who owns the booking.                                                                         |
+| `event`             | `ForeignKey(Event)`    | Event being booked.                                                                                |
+| `quantity`          | `PositiveIntegerField` | Number of places included in the booking.                                                          |
+| `stripe_session_id` | `CharField(255)`       | Unique Stripe Checkout Session identifier used to associate payment confirmation with the booking. |
+| `status`            | `CharField(20)`        | Booking state. Either `confirmed` or `cancelled`.                                                  |
+| `stripe_refund_id`  | `CharField(255)`       | Optional Stripe refund identifier recorded after cancellation.                                     |
+| `cancelled_at`      | `DateTimeField`        | Optional timestamp recording when the booking was cancelled.                                       |
+| `created_at`        | `DateTimeField`        | Timestamp recorded when the booking is created.                                                    |
+
+### Model Behaviour
+
+`total_price` calculates the booking value using:
+
+```text
+event price x booking quantity
+```
+
+Only bookings with a `confirmed` status contribute to an event's booked capacity. Cancelled bookings therefore release their places back into the event's available capacity.
+
+`stripe_session_id` is unique, helping prevent the same Stripe Checkout Session from being represented by multiple booking records.
+
+### Relationships
+
+A user can have **many bookings**, while each booking belongs to **one user**.
+
+An event can have **many bookings**, while each booking belongs to **one event**.
+
+Both relationships currently use cascading deletion:
+
+* deleting a user deletes that user's associated bookings;
+* deleting an event deletes bookings associated with that event.
+
+## Relationship Summary
+
+| Parent     | Child     | Relationship |
+| ---------- | --------- | ------------ |
+| `User`     | `Booking` | One-to-many  |
+| `Category` | `Event`   | One-to-many  |
+| `Event`    | `Booking` | One-to-many  |
+
+This structure avoids duplicating user and event information inside booking records. Bookings reference the existing user and event through foreign keys, allowing the application to retrieve related information using Django's ORM.
 
 * * *
 
