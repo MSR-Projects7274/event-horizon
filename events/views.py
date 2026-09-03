@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.views.decorators.http import require_GET
 
 from .forms import BookingForm
 from .models import Category, Event, Booking
@@ -65,8 +66,9 @@ def event_detail(request, event_id):
     )
 
 @login_required
+@require_GET
 def book_event(request, event_id):
-    """Validate a booking request before sending the user to Stripe."""
+    """Display the booking form before payment."""
 
     event = get_object_or_404(
         Event,
@@ -80,27 +82,7 @@ def book_event(request, event_id):
             event_id=event.id,
         )
 
-    if request.method == 'POST':
-        form = BookingForm(request.POST)
-
-        if form.is_valid():
-
-            quantity = form.cleaned_data['quantity']
-
-            if quantity > event.places_remaining:
-                form.add_error(
-                    'quantity',
-                    f'Only {event.places_remaining} places are available.'
-                )
-
-            else:
-                return redirect(
-                    'create_checkout_session',
-                    event_id=event.id,
-                )
-
-    else:
-        form = BookingForm()
+    form = BookingForm()
 
     return render(
         request,
