@@ -1,11 +1,11 @@
-from django.contrib.auth.decorators import login_required
-from .forms import RegistrationForm
-from django.shortcuts import redirect, render
 from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
+from django.shortcuts import redirect, render
 
 from events.models import Booking
-from .forms import ProfileForm
+
+from .forms import ProfileForm, RegistrationForm
 
 
 def register(request):
@@ -30,6 +30,7 @@ def register(request):
         {'form': form}
     )
 
+
 @login_required
 def profile(request):
     """Display the user's profile and bookings."""
@@ -52,6 +53,7 @@ def profile(request):
             'profile_user': request.user,
         }
     )
+
 
 @login_required
 def edit_profile(request):
@@ -80,6 +82,7 @@ def edit_profile(request):
             'form': form,
         }
     )
+
 
 @login_required
 def change_password(request):

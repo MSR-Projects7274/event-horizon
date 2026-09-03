@@ -1,19 +1,20 @@
 import stripe
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from django.db import models
 from django.shortcuts import get_object_or_404, redirect, render
-from django.conf import settings
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 from .forms import BookingForm
-from .models import Category, Event, Booking
-from django.db import models
-from django.utils import timezone
+from .models import Booking, Category, Event
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
 
 def event_list(request):
     """Display active events with search and category filtering."""
@@ -65,6 +66,7 @@ def event_detail(request, event_id):
         {'event': event}
     )
 
+
 @login_required
 @require_GET
 def book_event(request, event_id):
@@ -92,6 +94,7 @@ def book_event(request, event_id):
             'form': form,
         }
     )
+
 
 @login_required
 def cancel_booking(request, booking_id):

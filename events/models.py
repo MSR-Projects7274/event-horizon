@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 
 class Category(models.Model):
@@ -55,12 +55,9 @@ class Event(models.Model):
         """Return the number of currently booked places."""
 
         return sum(
-        booking.quantity
-        for booking in self.bookings.filter(
-            status='confirmed'
+            booking.quantity
+            for booking in self.bookings.filter(status='confirmed')
         )
-    )
-
 
     @property
     def places_remaining(self):
@@ -69,11 +66,12 @@ class Event(models.Model):
         return self.capacity - self.places_booked
 
     class Meta:
-            ordering = ['date', 'time']
+        ordering = ['date', 'time']
 
     def __str__(self):
-            return self.name
-    
+        return self.name
+
+
 class Booking(models.Model):
     """A user's booking for an event."""
 

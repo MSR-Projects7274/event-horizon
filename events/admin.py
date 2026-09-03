@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import Booking, Category, Event
 
 
@@ -35,6 +36,7 @@ class EventAdmin(admin.ModelAdmin):
     )
 
     ordering = ('date', 'time')
+
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):

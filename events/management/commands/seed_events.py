@@ -1509,14 +1509,15 @@ EVENT_DATA = [
 ]
 
 
-
 def select_event_templates(count):
     """Randomly choose event templates without repeating titles unnecessarily."""
 
     category_events = {}
 
     for event_data in EVENT_DATA:
-        category_events.setdefault(event_data["category"], []).append(event_data)
+        category_events.setdefault(
+            event_data["category"], []
+        ).append(event_data)
 
     category_names = list(category_events.keys())
     selected_events = []
@@ -1525,7 +1526,9 @@ def select_event_templates(count):
         # If enough events are requested, guarantee at least one per category.
         if count >= len(category_names):
             for category_name in category_names:
-                selected_events.append(random.choice(category_events[category_name]))
+                selected_events.append(
+                    random.choice(category_events[category_name])
+                )
 
             selected_names = {event["name"] for event in selected_events}
             remaining_events = [
@@ -1548,10 +1551,19 @@ def select_event_templates(count):
 
             # Prevent the first item in a recycled batch from repeating the
             # title immediately before it, even if only one item is needed.
-            if selected_events and batch[0]["name"] == selected_events[-1]["name"]:
+            if (
+                selected_events
+                and batch[0]["name"] == selected_events[-1]["name"]
+            ):
                 for swap_index in range(1, len(batch)):
-                    if batch[swap_index]["name"] != selected_events[-1]["name"]:
-                        batch[0], batch[swap_index] = batch[swap_index], batch[0]
+                    if (
+                        batch[swap_index]["name"]
+                        != selected_events[-1]["name"]
+                    ):
+                        batch[0], batch[swap_index] = (
+                            batch[swap_index],
+                            batch[0],
+                        )
                         break
 
             take = min(remaining, len(batch))

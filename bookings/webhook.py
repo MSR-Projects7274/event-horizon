@@ -1,15 +1,14 @@
 import stripe
 
 from django.conf import settings
+from django.core.mail import send_mail
 from django.db import transaction
 from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
-from events.models import Event, Booking
-
+from events.models import Booking, Event
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -120,7 +119,7 @@ def stripe_webhook(request):
             'total_price': total_price,
             'bookings_url': request.build_absolute_uri(
                 reverse('profile')
-                ),
+            ),
         }
 
         html_message = render_to_string(
@@ -147,4 +146,5 @@ def stripe_webhook(request):
             recipient_list=[customer_email],
             html_message=html_message,
         )
+
     return HttpResponse(status=200)

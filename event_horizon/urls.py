@@ -17,22 +17,25 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
 from django.contrib.auth import views as auth_views
+from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('home.urls')),
     path('events/', include('events.urls')),
-    path('accounts/login/', auth_views.LoginView.as_view(redirect_authenticated_user=True),name='login',),
+    path(
+        'accounts/login/',
+        auth_views.LoginView.as_view(redirect_authenticated_user=True),
+        name='login',
+    ),
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/', include('profiles.urls')),
-    path('bookings/', include('bookings.urls'),
-),
+    path('bookings/', include('bookings.urls')),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(
         settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT
+        document_root=settings.MEDIA_ROOT,
     )

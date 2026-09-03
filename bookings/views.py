@@ -2,10 +2,10 @@ import stripe
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import (get_object_or_404, redirect, render,)
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from events.models import Event, Booking
+from events.models import Booking, Event
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -53,14 +53,12 @@ def create_checkout_session(request, event_id):
     )
 
     checkout_session = stripe.checkout.Session.create(
-    mode='payment',
-    customer_email=request.user.email,
-
+        mode='payment',
+        customer_email=request.user.email,
         line_items=[
             {
                 'price_data': {
                     'currency': 'gbp',
-
                     'product_data': {
                         'name': event.name,
                         'description': (
@@ -69,27 +67,22 @@ def create_checkout_session(request, event_id):
                             f'{event.location}'
                         ),
                     },
-
                     'unit_amount': amount,
                 },
-
                 'quantity': quantity,
             }
         ],
-
         metadata={
             'event_id': str(event.id),
             'user_id': str(request.user.id),
             'quantity': str(quantity),
         },
-
         success_url=(
             request.build_absolute_uri(
                 reverse('booking_success')
             )
             + '?session_id={CHECKOUT_SESSION_ID}'
         ),
-
         cancel_url=request.build_absolute_uri(
             reverse(
                 'event_detail',
@@ -101,6 +94,7 @@ def create_checkout_session(request, event_id):
     return redirect(
         checkout_session.url
     )
+
 
 @login_required
 def booking_success(request):
