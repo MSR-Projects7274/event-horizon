@@ -1,3 +1,6 @@
+import logging
+from smtplib import SMTPException
+
 import stripe
 
 from django.conf import settings
@@ -14,6 +17,7 @@ from .forms import BookingForm
 from .models import Booking, Category, Event
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+logger = logging.getLogger(__name__)
 
 
 def event_list(request):
@@ -186,13 +190,19 @@ def cancel_booking(request, booking_id):
                     'Thank you for choosing Event Horizon.'
                 )
 
-                send_mail(
-                    subject='Your Event Horizon booking has been cancelled',
-                    message=plain_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[customer_email],
-                    html_message=html_message,
-                )
+                try:
+                    send_mail(
+                        subject='Your Event Horizon booking has been cancelled',
+                        message=plain_message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[customer_email],
+                        html_message=html_message,
+                    )
+                except (SMTPException, OSError):
+                    logger.exception(
+                        'Cancellation email failed for booking %s',
+                        booking.id,
+                    )
 
             return redirect('profile')
 

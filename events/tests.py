@@ -1,5 +1,6 @@
 from datetime import time, timedelta
 from decimal import Decimal
+from smtplib import SMTPDataError
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -230,4 +231,37 @@ class EventViewTests(TestCase):
         self.assertEqual(booking.stripe_refund_id, 're_123')
         self.assertIsNotNone(booking.cancelled_at)
         mock_refund.assert_called_once_with(payment_intent='pi_123')
+        mock_send_mail.assert_called_once()
+
+    @patch('events.views.send_mail')
+    @patch('events.views.stripe.Refund.create')
+    @patch('events.views.stripe.checkout.Session.retrieve')
+    def test_cancel_booking_still_succeeds_when_email_fails(
+        self,
+        mock_retrieve,
+        mock_refund,
+        mock_send_mail,
+    ):
+        booking = Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=2,
+            stripe_session_id='cs_email_failure',
+        )
+        mock_retrieve.return_value = SimpleNamespace(payment_intent='pi_456')
+        mock_refund.return_value = SimpleNamespace(id='re_456')
+        mock_send_mail.side_effect = SMTPDataError(
+            550,
+            b'Invalid recipient',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse('cancel_booking', args=[booking.id]))
+
+        self.assertRedirects(response, reverse('profile'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, 'cancelled')
+        self.assertEqual(booking.stripe_refund_id, 're_456')
+        self.assertIsNotNone(booking.cancelled_at)
+        mock_refund.assert_called_once_with(payment_intent='pi_456')
         mock_send_mail.assert_called_once()
