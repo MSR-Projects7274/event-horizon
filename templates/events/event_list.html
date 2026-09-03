@@ -124,7 +124,15 @@
 
     {% else %}
 
-        <p>There are no upcoming events in this category.</p>
+        {% if search_query and selected_category %}
+            <p>No upcoming events found matching your search in this category.</p>
+        {% elif search_query %}
+            <p>No upcoming events found matching your search.</p>
+        {% elif selected_category %}
+            <p>There are no upcoming events in this category.</p>
+        {% else %}
+            <p>There are no upcoming events at the moment.</p>
+        {% endif %}
 
     {% endif %}
 
