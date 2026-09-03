@@ -3,6 +3,7 @@ import stripe
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import (get_object_or_404, redirect, render,)
+from django.urls import reverse
 
 from events.models import Event, Booking
 
@@ -84,13 +85,16 @@ def create_checkout_session(request, event_id):
 
         success_url=(
             request.build_absolute_uri(
-                '/bookings/success/'
+                reverse('booking_success')
             )
             + '?session_id={CHECKOUT_SESSION_ID}'
         ),
 
         cancel_url=request.build_absolute_uri(
-            f'/events/{event.id}/'
+            reverse(
+                'event_detail',
+                kwargs={'event_id': event.id},
+            )
         ),
     )
 
