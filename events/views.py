@@ -20,7 +20,10 @@ def event_list(request):
     search_query = request.GET.get('q', '').strip()
     category_id = request.GET.get('category')
 
-    events = Event.objects.filter(active=True)
+    events = Event.objects.filter(
+        active=True
+    ).select_related('category')
+
     categories = Category.objects.all()
 
     if search_query:
