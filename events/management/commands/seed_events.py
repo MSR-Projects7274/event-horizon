@@ -11,7 +11,7 @@ from events.models import Category, Event
 
 # BASE CODE BY MYSELF, FULLY IMPLEMENTED BY CHATGPT
 
-DESCRIPTION_DATA = {
+THEME_DESCRIPTION_DATA = {
 
     "walking_tour": {
         "category": "Adventure",
@@ -503,10 +503,10 @@ DESCRIPTION_DATA = {
 }
 
 
-def generate_description(theme):
+def generate_theme_description(theme):
     """Generate a varied description based on the event's specific theme."""
 
-    data = DESCRIPTION_DATA[theme]
+    data = THEME_DESCRIPTION_DATA[theme]
 
     sentences = [
         random.choice(data["openings"]),
@@ -532,7 +532,7 @@ def generate_description(theme):
     return " ".join(result)
 
 
-
+CATEGORY_DESCRIPTION_DATA = {
     "Adventure": {
         "openings": [
             "Get ready for an afternoon of exploration, fresh air, and something a little different.",
@@ -561,7 +561,7 @@ def generate_description(theme):
             "All that's left is to turn up, get involved, and enjoy the journey.",
             "The route is waiting. The only question is whether you're coming along.",
         ],
-    }
+    },
 
     "Arts & Culture": {
         "openings": [
@@ -591,7 +591,7 @@ def generate_description(theme):
             "Take your time, enjoy the atmosphere, and let the creativity take centre stage.",
             "All that's required is curiosity. Everything else is provided.",
         ],
-    }
+    },
 
     "Family": {
         "openings": [
@@ -621,7 +621,7 @@ def generate_description(theme):
             "Come along ready to explore, laugh, and perhaps get a little messy.",
             "Gather everyone together and make some memories.",
         ],
-    }
+    },
 
     "Food & Drink": {
         "openings": [
@@ -651,7 +651,7 @@ def generate_description(theme):
             "Grab a seat, enjoy the atmosphere, and prepare for a very tasty few hours.",
             "All that's left is to turn up hungry.",
         ],
-    }
+    },
 
     "Music & Entertainment": {
         "openings": [
@@ -681,7 +681,7 @@ def generate_description(theme):
             "Bring your friends, grab a drink, and prepare for a great night out.",
             "All you need to bring is yourself and a willingness to enjoy the show.",
         ],
-    }
+    },
 
     "Workshops": {
         "openings": [
@@ -711,7 +711,7 @@ def generate_description(theme):
             "All materials are provided, so all you need to bring is yourself.",
             "Give it a go and discover just how satisfying learning something new can be.",
         ],
-    }
+    },
 
     "Not For the Faint of Heart": {
         "openings": [
@@ -741,14 +741,14 @@ def generate_description(theme):
             "If you're brave enough to enter, we'll see you on the other side.",
             "Come if you dare. Leave if you can.",
         ],
-    }
+    },
+}
 
 
-
-def generate_description(category):
+def generate_category_description(category):
     """Build a fresh, varied description for an event."""
 
-    data = DESCRIPTION_DATA[category]
+    data = CATEGORY_DESCRIPTION_DATA[category]
 
     sentences = [
         random.choice(data["openings"]),
@@ -772,6 +772,84 @@ def generate_description(category):
             unique_sentences.append(sentence)
 
     return " ".join(unique_sentences)
+
+
+# Map event titles to the more specific description themes where one exists.
+# Events without a close theme match fall back to their broader category data.
+DESCRIPTION_THEME_BY_TITLE = {
+    # Adventure
+    "Hidden History Walking Tour": "walking_tour",
+    "After Dark City Tour": "walking_tour",
+    "Riverside Kayaking Experience": "kayaking",
+    "Sunset Woodland Walk": "hiking",
+    "Canal Canoeing Challenge": "kayaking",
+    "Sunrise Hilltop Hike": "hiking",
+    "Urban Climbing Taster": "climbing",
+    "Orienteering Challenge": "orienteering",
+    "The Great City Treasure Hunt": "orienteering",
+
+    # Arts & Culture
+    "Beginner's Pottery Workshop": "pottery",
+    "Introduction to Watercolour": "watercolour",
+    "Local Artists Exhibition Night": "exhibition",
+    "Museum After Hours": "exhibition",
+
+    # Family
+    "Family Science Day": "family_science",
+    "Build Your Own Rocket": "family_science",
+    "Dinosaur Discovery Day": "family_science",
+    "Outdoor Treasure Hunt": "treasure_hunt",
+
+    # Food & Drink
+    "Evening Street Food Tour": "street_food",
+    "Local Food & Market Walk": "street_food",
+    "World Street Food Festival": "street_food",
+    "Artisan Chocolate Workshop": "chocolate",
+    "Dessert Decorating Workshop": "chocolate",
+    "Pasta From Scratch": "pasta",
+
+    # Music & Entertainment
+    "Live Acoustic Night": "acoustic_music",
+    "Indie Unplugged": "acoustic_music",
+    "Battle of the Bands": "acoustic_music",
+    "Open Mic Night": "acoustic_music",
+    "Tribute Night Live": "acoustic_music",
+    "Jazz Under the Stars": "jazz",
+    "Vinyl DJ Night": "jazz",
+    "Comedy Club Night": "comedy",
+    "Comedy Improv Evening": "comedy",
+
+    # Workshops
+    "Beginner's Photography Walk": "photography",
+    "Introduction to Wood Carving": "woodworking",
+    "Furniture Restoration Basics": "woodworking",
+    "Introduction to Screen Printing": "screen_printing",
+
+    # Not For the Faint of Heart
+    "The Last Showing": "horror_experience",
+    "After Midnight": "horror_experience",
+    "The Empty Room": "horror_experience",
+    "The House at the End of the Lane": "horror_experience",
+    "The Last Broadcast": "horror_experience",
+    "Room 13": "horror_experience",
+    "The Red Door": "horror_experience",
+    "The Night Shift": "horror_experience",
+    "Something in the Woods": "horror_experience",
+    "Last Train Home": "horror_experience",
+}
+
+
+def generate_description(event_data):
+    """Generate a varied description appropriate to the selected event."""
+
+    theme = DESCRIPTION_THEME_BY_TITLE.get(event_data["name"])
+
+    # Where we have a specific theme, mix both generators so repeated seed runs
+    # do not make every event with the same title read identically.
+    if theme and random.random() < 0.7:
+        return generate_theme_description(theme)
+
+    return generate_category_description(event_data["category"])
 
 
 # EVENT CATALOGUE
@@ -1431,6 +1509,58 @@ EVENT_DATA = [
 ]
 
 
+
+def select_event_templates(count):
+    """Randomly choose event templates without repeating titles unnecessarily."""
+
+    category_events = {}
+
+    for event_data in EVENT_DATA:
+        category_events.setdefault(event_data["category"], []).append(event_data)
+
+    category_names = list(category_events.keys())
+    selected_events = []
+
+    if count <= len(EVENT_DATA):
+        # If enough events are requested, guarantee at least one per category.
+        if count >= len(category_names):
+            for category_name in category_names:
+                selected_events.append(random.choice(category_events[category_name]))
+
+            selected_names = {event["name"] for event in selected_events}
+            remaining_events = [
+                event for event in EVENT_DATA
+                if event["name"] not in selected_names
+            ]
+            random.shuffle(remaining_events)
+            selected_events.extend(
+                remaining_events[:count - len(selected_events)]
+            )
+        else:
+            selected_events = random.sample(EVENT_DATA, count)
+    else:
+        # Exhaust the full catalogue before allowing titles to repeat.
+        remaining = count
+
+        while remaining > 0:
+            batch = EVENT_DATA.copy()
+            random.shuffle(batch)
+
+            # Prevent the first item in a recycled batch from repeating the
+            # title immediately before it, even if only one item is needed.
+            if selected_events and batch[0]["name"] == selected_events[-1]["name"]:
+                for swap_index in range(1, len(batch)):
+                    if batch[swap_index]["name"] != selected_events[-1]["name"]:
+                        batch[0], batch[swap_index] = batch[swap_index], batch[0]
+                        break
+
+            take = min(remaining, len(batch))
+            selected_events.extend(batch[:take])
+            remaining -= take
+
+    return selected_events
+
+
 # MANAGEMENT COMMAND
 
 class Command(BaseCommand):
@@ -1481,81 +1611,7 @@ class Command(BaseCommand):
                 )
                 categories[category_name] = category
 
-        # Group events by category.
-        category_events = {}
-
-        for event_data in EVENT_DATA:
-            category_events.setdefault(
-                event_data["category"],
-                []
-            ).append(event_data)
-
-        category_names = list(category_events.keys())
-
-        selected_events = []
-
-        # Choose events without repeating until the catalogue
-        # has been exhausted.
-
-        if count <= len(EVENT_DATA):
-
-            # If we're requesting at least one event per category,
-            # guarantee category coverage.
-            if count >= len(category_names):
-
-                for category_name in category_names:
-                    selected_events.append(
-                        random.choice(
-                            category_events[category_name]
-                        )
-                    )
-
-                selected_names = {
-                    event["name"]
-                    for event in selected_events
-                }
-
-                remaining_events = [
-                    event
-                    for event in EVENT_DATA
-                    if event["name"] not in selected_names
-                ]
-
-                random.shuffle(remaining_events)
-
-                selected_events.extend(
-                    remaining_events[
-                        :count - len(selected_events)
-                    ]
-                )
-
-            else:
-                selected_events = random.sample(
-                    EVENT_DATA,
-                    count
-                )
-
-        else:
-
-            # More events requested than unique events available.
-            # Use the whole catalogue first, then recycle it.
-            remaining = count
-
-            while remaining > 0:
-
-                batch = EVENT_DATA.copy()
-                random.shuffle(batch)
-
-                take = min(
-                    remaining,
-                    len(batch)
-                )
-
-                selected_events.extend(
-                    batch[:take]
-                )
-
-                remaining -= take
+        selected_events = select_event_templates(count)
 
         # Create the events.
 
@@ -1569,9 +1625,7 @@ class Command(BaseCommand):
                 days=random.randint(0, 60)
             )
 
-            description = generate_description(
-                event_data["category"]
-            )
+            description = generate_description(event_data)
 
             event = Event.objects.create(
                 category=categories[event_data["category"]],
