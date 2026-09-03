@@ -46,10 +46,11 @@
         <div class="event-grid">
 
             {% for event in events %}
+                {% with places_remaining=event.places_remaining %}
 
-                <article class="event-card {% if event.places_remaining <= 0 %}sold-out-card{% endif %}">
+                <article class="event-card {% if places_remaining <= 0 %}sold-out-card{% endif %}">
 
-                {% if event.places_remaining <= 0 %}
+                {% if places_remaining <= 0 %}
                     <div class="sold-out-overlay">
                         <span>SOLD OUT</span>
                     </div>
@@ -94,7 +95,7 @@
                                 £{{ event.price }}
                             </strong>
 
-                            {% if event.places_remaining > 0 %}
+                            {% if places_remaining > 0 %}
 
                             <a
                                 href="{% url 'event_detail' event.id %}"
@@ -116,7 +117,7 @@
                     </div>
 
                 </article>
-
+                {% endwith %}
             {% endfor %}
 
         </div>
