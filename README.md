@@ -586,83 +586,15 @@ Screenshots of the final implemented pages will also be included where appropria
 
 # Testing
 
-<details>
-<summary><strong>Click to expand testing information</strong></summary>
+Event Horizon uses a combination of automated Django tests and manual browser-based testing.
 
-<br>
+The automated test suite currently contains **44 passing tests** covering authentication, event discovery, booking behaviour, Stripe Checkout, webhook handling, refunds, capacity management and user permissions.
 
-Testing was carried out throughout development to identify functional, validation, security, payment and user-experience issues. The project uses both automated Django tests and manual browser-based testing.
+Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts and accessibility. **64 completed manual checks currently pass**, with event-image verification pending until final imagery is uploaded. Production-specific testing will be completed against the final Heroku deployment.
 
-## Automated Testing
+Full testing procedures, results, discovered issues and pending production checks are documented separately:
 
-Automated tests are implemented in the `tests.py` files for the `home`, `profiles`, `events` and `bookings` apps.
-
-The suite uses Django's `TestCase` together with `unittest.mock.patch` where external Stripe behaviour needs to be isolated. This allows payment and webhook logic to be tested without making live Stripe requests or creating real charges.
-
-The full automated suite can be run with:
-
-```bash
-python manage.py test
-```
-
-Latest test result:
-
-```text
-Ran 43 tests in 77.439s
-
-OK
-```
-
-All 43 automated tests passed.
-
-| App        |  Tests | Areas Covered                                                                                                                                                                                                                                             |
-| ---------- | -----: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `home`     |      4 | Home page rendering, active and upcoming event filtering, featured-event limits and About page rendering.                                                                                                                                                 |
-| `profiles` |      9 | Registration, required email validation, anonymous-only login and registration access, protected profiles, booking ownership, profile updates and password changes.                                                                                       |
-| `events`   |     14 | Model behaviour, booked and remaining capacity calculations, event search and filtering, inactive-event handling, booking access, sold-out behaviour, booking ownership and cancellation/refund handling.                                                 |
-| `bookings` |     16 | Stripe Checkout access and validation, quantity and capacity validation, reversed absolute URLs, booking confirmation ownership, webhook validation, unpaid events, duplicate webhook protection, capacity enforcement and confirmation email triggering. |
-| **Total**  | **43** | **Core application, authentication, booking, payment and webhook behaviour.**                                                                                                                                                                             |
-
-### Stripe and Webhook Testing
-
-Stripe operations are mocked during automated testing. Tests verify that the application sends the expected data to Stripe and responds correctly to simulated Stripe responses without contacting the live Stripe service.
-
-Automated Stripe and webhook tests include:
-
-* valid Checkout Session creation;
-* invalid, zero and negative booking quantities;
-* requests above the remaining event capacity;
-* missing customer email addresses;
-* reversed success and cancellation URLs;
-* malformed webhook payloads;
-* invalid webhook signatures;
-* unrelated and unpaid webhook events;
-* successful paid booking creation;
-* duplicate webhook delivery;
-* webhook capacity enforcement;
-* cancellation refunds and booking status updates.
-
-### Manual Testing
-
-Manual browser testing complements the automated suite, particularly for areas that require visual, responsive or external-service verification.
-
-The manual test pass will cover:
-
-* navigation and internal links;
-* account registration, login and logout;
-* event search and category filtering;
-* event details and booking journeys;
-* live Stripe Checkout behaviour;
-* booking cancellation and refund journeys;
-* administrator functionality;
-* form validation and user feedback;
-* responsive layouts and accessibility checks;
-* static and media files;
-* production deployment behaviour.
-
-Manual test results and screenshots will be recorded as they are completed so that expected results can be compared with actual results rather than inferred from the implementation.
-
-</details>
+**[View the complete testing documentation](TESTING.md)**
 
 * * *
 
