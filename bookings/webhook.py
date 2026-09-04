@@ -46,14 +46,18 @@ def refund_unfulfillable_booking(booking, payment_intent):
     return True
 
 
-def refund_missing_user_payment(session_id, payment_intent):
-    """Refund a paid session whose user no longer exists."""
+def refund_unfulfillable_payment(
+    session_id,
+    payment_intent,
+    idempotency_prefix,
+):
+    """Refund a paid session that cannot be fulfilled."""
 
     try:
         stripe.Refund.create(
             payment_intent=payment_intent,
             idempotency_key=(
-                f'missing-user-refund-{session_id}'
+                f'{idempotency_prefix}-{session_id}'
             ),
         )
     except stripe.error.StripeError:
@@ -138,9 +142,10 @@ def stripe_webhook(request):
         if not payment_intent:
             return HttpResponse(status=500)
 
-        if refund_missing_user_payment(
+        if refund_unfulfillable_payment(
             session_id,
             payment_intent,
+            'missing-user-refund',
         ):
             return HttpResponse(status=200)
 
@@ -200,7 +205,19 @@ def stripe_webhook(request):
                 booking = None
 
     except Event.DoesNotExist:
-        return HttpResponse(status=400)
+        if not payment_intent:
+            return HttpResponse(status=500)
+
+        if refund_unfulfillable_payment(
+            session_id,
+            payment_intent,
+            'unavailable-event-refund',
+        ):
+            return HttpResponse(status=200)
+
+        return HttpResponse(status=500)
+
+    # Refund if capacity disappeared after payment
 
     if booking:
         if not payment_intent:
@@ -258,4 +275,5 @@ def stripe_webhook(request):
                 'Booking confirmation email failed for Stripe session %s',
                 session_id,
             )
+
     return HttpResponse(status=200)
