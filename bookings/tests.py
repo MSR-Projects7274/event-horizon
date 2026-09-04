@@ -644,6 +644,55 @@ class WebhookTests(TestCase):
         mock_send_mail.assert_not_called()
 
     @patch('bookings.webhook.send_mail')
+    @patch('bookings.webhook.Booking.objects.filter')
+    @patch('bookings.webhook.stripe.Webhook.construct_event')
+    def test_concurrent_duplicate_webhook_is_ignored_after_event_lock(
+        self,
+        mock_construct_event,
+        mock_booking_filter,
+        mock_send_mail,
+    ):
+        existing_booking = Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=2,
+            stripe_session_id='cs_concurrent_duplicate',
+        )
+
+        session = self.stripe_session(
+            session_id='cs_concurrent_duplicate',
+            quantity='2',
+        )
+
+        mock_construct_event.return_value = self.stripe_event(session)
+
+        mock_booking_filter.return_value.first.side_effect = [
+            None,
+            existing_booking,
+        ]
+
+        response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            Booking.objects.count(),
+            1,
+        )
+
+        self.assertEqual(
+            mock_booking_filter.return_value.first.call_count,
+            2,
+        )
+
+        mock_send_mail.assert_not_called()
+
+    @patch('bookings.webhook.send_mail')
     @patch('bookings.webhook.stripe.Webhook.construct_event')
     def test_paid_checkout_still_succeeds_when_confirmation_email_fails(
         self,

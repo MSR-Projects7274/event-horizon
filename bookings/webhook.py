@@ -96,7 +96,6 @@ def stripe_webhook(request):
     session = stripe_event['data']['object']
 
     customer_details = session.customer_details.to_dict()
-
     customer_email = customer_details.get('email')
 
     # Make sure the payment was successful
@@ -131,6 +130,8 @@ def stripe_webhook(request):
     if not session_id:
         return HttpResponse(status=400)
 
+    # Make sure the booking user still exists
+
     try:
         user_exists = User.objects.filter(
             pk=user_id,
@@ -151,7 +152,7 @@ def stripe_webhook(request):
 
         return HttpResponse(status=500)
 
-    # Prevent duplicate bookings
+    # Prevent duplicate bookings already processed
 
     existing_booking = Booking.objects.filter(
         stripe_session_id=session_id
@@ -175,7 +176,8 @@ def stripe_webhook(request):
 
         return HttpResponse(status=200)
 
-    # Check capacity and create booking
+    # Lock the event, recheck for concurrent webhook delivery,
+    # then check capacity and create the booking.
 
     try:
 
@@ -186,7 +188,14 @@ def stripe_webhook(request):
                 active=True,
             )
 
-            if quantity > event.places_remaining:
+            concurrent_booking = Booking.objects.filter(
+                stripe_session_id=session_id,
+            ).first()
+
+            if concurrent_booking:
+                booking = None
+
+            elif quantity > event.places_remaining:
                 booking = Booking.objects.create(
                     user_id=user_id,
                     event=event,
@@ -194,6 +203,7 @@ def stripe_webhook(request):
                     stripe_session_id=session_id,
                     status='cancelled',
                 )
+
             else:
                 Booking.objects.create(
                     user_id=user_id,
@@ -216,6 +226,27 @@ def stripe_webhook(request):
             return HttpResponse(status=200)
 
         return HttpResponse(status=500)
+
+    # A duplicate webhook may have created the booking while this
+    # request was waiting for the event lock.
+
+    if concurrent_booking:
+        if (
+            concurrent_booking.status == 'cancelled'
+            and not concurrent_booking.stripe_refund_id
+        ):
+            if not payment_intent:
+                return HttpResponse(status=500)
+
+            if refund_unfulfillable_booking(
+                concurrent_booking,
+                payment_intent,
+            ):
+                return HttpResponse(status=200)
+
+            return HttpResponse(status=500)
+
+        return HttpResponse(status=200)
 
     # Refund if capacity disappeared after payment
 
