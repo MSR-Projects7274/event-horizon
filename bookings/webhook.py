@@ -9,12 +9,39 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from events.models import Booking, Event
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 logger = logging.getLogger(__name__)
+
+
+def refund_unfulfillable_booking(booking, payment_intent):
+    """Refund a paid booking that can no longer be fulfilled."""
+
+    try:
+        refund = stripe.Refund.create(
+            payment_intent=payment_intent,
+            idempotency_key=(
+                f'capacity-refund-{booking.stripe_session_id}'
+            ),
+        )
+    except stripe.error.StripeError:
+        return False
+
+    booking.stripe_refund_id = refund.id
+    booking.cancelled_at = timezone.now()
+
+    booking.save(
+        update_fields=[
+            'stripe_refund_id',
+            'cancelled_at',
+        ]
+    )
+
+    return True
 
 
 @csrf_exempt
@@ -77,15 +104,33 @@ def stripe_webhook(request):
     # Stripe Checkout Session ID
 
     session_id = session.id
+    payment_intent = session.payment_intent
 
     if not session_id:
         return HttpResponse(status=400)
 
     # Prevent duplicate bookings
 
-    if Booking.objects.filter(
+    existing_booking = Booking.objects.filter(
         stripe_session_id=session_id
-    ).exists():
+    ).first()
+
+    if existing_booking:
+        if (
+            existing_booking.status == 'cancelled'
+            and not existing_booking.stripe_refund_id
+        ):
+            if not payment_intent:
+                return HttpResponse(status=500)
+
+            if refund_unfulfillable_booking(
+                existing_booking,
+                payment_intent,
+            ):
+                return HttpResponse(status=200)
+
+            return HttpResponse(status=500)
+
         return HttpResponse(status=200)
 
     # Check capacity and create booking
@@ -100,17 +145,37 @@ def stripe_webhook(request):
             )
 
             if quantity > event.places_remaining:
-                return HttpResponse(status=400)
+                booking = Booking.objects.create(
+                    user_id=user_id,
+                    event=event,
+                    quantity=quantity,
+                    stripe_session_id=session_id,
+                    status='cancelled',
+                )
+            else:
+                Booking.objects.create(
+                    user_id=user_id,
+                    event=event,
+                    quantity=quantity,
+                    stripe_session_id=session_id,
+                )
 
-            Booking.objects.create(
-                user_id=user_id,
-                event=event,
-                quantity=quantity,
-                stripe_session_id=session_id,
-            )
+                booking = None
 
     except Event.DoesNotExist:
         return HttpResponse(status=400)
+
+    if booking:
+        if not payment_intent:
+            return HttpResponse(status=500)
+
+        if refund_unfulfillable_booking(
+            booking,
+            payment_intent,
+        ):
+            return HttpResponse(status=200)
+
+        return HttpResponse(status=500)
 
     # Send booking confirmation email
 

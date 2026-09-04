@@ -225,6 +225,7 @@ class WebhookTests(TestCase):
         session_id='cs_webhook',
         quantity='2',
         payment_status='paid',
+        payment_intent='pi_webhook',
         event_id=None,
         user_id=None,
         email=None,
@@ -232,6 +233,7 @@ class WebhookTests(TestCase):
         return SimpleNamespace(
             id=session_id,
             payment_status=payment_status,
+            payment_intent=payment_intent,
             customer_details=StripeDict(
                 email=email if email is not None else self.user.email
             ),
@@ -260,6 +262,126 @@ class WebhookTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    @patch('bookings.webhook.stripe.Refund.create')
+    @patch('bookings.webhook.stripe.Webhook.construct_event')
+    def test_webhook_refunds_paid_booking_when_capacity_is_unavailable(
+        self,
+        mock_construct_event,
+        mock_refund,
+    ):
+        Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=4,
+            stripe_session_id='cs_existing_capacity',
+        )
+
+        session = self.stripe_session(
+            session_id='cs_over_capacity',
+            quantity='2',
+        )
+
+        mock_construct_event.return_value = self.stripe_event(session)
+
+        mock_refund.return_value = SimpleNamespace(
+            id='re_over_capacity'
+        )
+
+        response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        booking = Booking.objects.get(
+            stripe_session_id='cs_over_capacity'
+        )
+
+        self.assertEqual(booking.status, 'cancelled')
+        self.assertEqual(
+            booking.stripe_refund_id,
+            're_over_capacity',
+        )
+        self.assertIsNotNone(booking.cancelled_at)
+
+        mock_refund.assert_called_once_with(
+            payment_intent='pi_webhook',
+            idempotency_key='capacity-refund-cs_over_capacity',
+        )
+
+    @patch('bookings.webhook.stripe.Refund.create')
+    @patch('bookings.webhook.stripe.Webhook.construct_event')
+    def test_failed_capacity_refund_is_retried_without_duplicate_booking(
+        self,
+        mock_construct_event,
+        mock_refund,
+    ):
+        Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=4,
+            stripe_session_id='cs_existing_capacity',
+        )
+
+        session = self.stripe_session(
+            session_id='cs_retry_refund',
+            quantity='2',
+        )
+
+        mock_construct_event.return_value = self.stripe_event(session)
+
+        mock_refund.side_effect = [
+            stripe.error.APIConnectionError(
+                'Temporary Stripe failure'
+            ),
+            SimpleNamespace(id='re_retry_success'),
+        ]
+
+        first_response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(first_response.status_code, 500)
+
+        booking = Booking.objects.get(
+            stripe_session_id='cs_retry_refund'
+        )
+
+        self.assertEqual(booking.status, 'cancelled')
+        self.assertIsNone(booking.stripe_refund_id)
+
+        second_response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(second_response.status_code, 200)
+
+        booking.refresh_from_db()
+
+        self.assertEqual(
+            booking.stripe_refund_id,
+            're_retry_success',
+        )
+        self.assertIsNotNone(booking.cancelled_at)
+
+        self.assertEqual(
+            Booking.objects.filter(
+                stripe_session_id='cs_retry_refund'
+            ).count(),
+            1,
+        )
+
+        self.assertEqual(mock_refund.call_count, 2)
 
     @patch('bookings.webhook.stripe.Webhook.construct_event')
     def test_webhook_rejects_invalid_signature(self, mock_construct_event):
@@ -364,35 +486,6 @@ class WebhookTests(TestCase):
             1,
         )
         mock_send_mail.assert_not_called()
-
-    @patch('bookings.webhook.stripe.Webhook.construct_event')
-    def test_webhook_rejects_booking_above_remaining_capacity(
-        self,
-        mock_construct_event,
-    ):
-        Booking.objects.create(
-            user=self.user,
-            event=self.event,
-            quantity=4,
-            stripe_session_id='cs_existing_capacity',
-        )
-        session = self.stripe_session(
-            session_id='cs_over_capacity',
-            quantity='2',
-        )
-        mock_construct_event.return_value = self.stripe_event(session)
-
-        response = self.client.post(
-            self.webhook_url,
-            data='{}',
-            content_type='application/json',
-            HTTP_STRIPE_SIGNATURE='test-signature',
-        )
-
-        self.assertEqual(response.status_code, 400)
-        self.assertFalse(
-            Booking.objects.filter(stripe_session_id='cs_over_capacity').exists()
-        )
 
     @patch('bookings.webhook.send_mail')
     @patch('bookings.webhook.stripe.Webhook.construct_event')
