@@ -4,6 +4,7 @@ from smtplib import SMTPException
 import stripe
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db import transaction
 from django.http import HttpResponse
@@ -16,6 +17,7 @@ from events.models import Booking, Event
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 def refund_unfulfillable_booking(booking, payment_intent):
@@ -40,6 +42,22 @@ def refund_unfulfillable_booking(booking, payment_intent):
             'cancelled_at',
         ]
     )
+
+    return True
+
+
+def refund_missing_user_payment(session_id, payment_intent):
+    """Refund a paid session whose user no longer exists."""
+
+    try:
+        stripe.Refund.create(
+            payment_intent=payment_intent,
+            idempotency_key=(
+                f'missing-user-refund-{session_id}'
+            ),
+        )
+    except stripe.error.StripeError:
+        return False
 
     return True
 
@@ -108,6 +126,25 @@ def stripe_webhook(request):
 
     if not session_id:
         return HttpResponse(status=400)
+
+    try:
+        user_exists = User.objects.filter(
+            pk=user_id,
+        ).exists()
+    except (TypeError, ValueError):
+        return HttpResponse(status=400)
+
+    if not user_exists:
+        if not payment_intent:
+            return HttpResponse(status=500)
+
+        if refund_missing_user_payment(
+            session_id,
+            payment_intent,
+        ):
+            return HttpResponse(status=200)
+
+        return HttpResponse(status=500)
 
     # Prevent duplicate bookings
 

@@ -391,6 +391,44 @@ class WebhookTests(TestCase):
 
     @patch('bookings.webhook.stripe.Refund.create')
     @patch('bookings.webhook.stripe.Webhook.construct_event')
+    def test_webhook_refunds_payment_when_user_no_longer_exists(
+        self,
+        mock_construct_event,
+        mock_refund,
+    ):
+        session = self.stripe_session(
+            session_id='cs_missing_user',
+            user_id=999999,
+        )
+
+        mock_construct_event.return_value = self.stripe_event(session)
+
+        mock_refund.return_value = SimpleNamespace(
+            id='re_missing_user'
+        )
+
+        response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertFalse(
+            Booking.objects.filter(
+                stripe_session_id='cs_missing_user'
+            ).exists()
+        )
+
+        mock_refund.assert_called_once_with(
+            payment_intent='pi_webhook',
+            idempotency_key='missing-user-refund-cs_missing_user',
+        )
+
+    @patch('bookings.webhook.stripe.Refund.create')
+    @patch('bookings.webhook.stripe.Webhook.construct_event')
     def test_failed_capacity_refund_is_retried_without_duplicate_booking(
         self,
         mock_construct_event,
