@@ -2,7 +2,7 @@ from datetime import time, timedelta
 from decimal import Decimal
 from smtplib import SMTPDataError
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -230,7 +230,104 @@ class EventViewTests(TestCase):
         self.assertEqual(booking.status, 'cancelled')
         self.assertEqual(booking.stripe_refund_id, 're_123')
         self.assertIsNotNone(booking.cancelled_at)
-        mock_refund.assert_called_once_with(payment_intent='pi_123')
+        mock_refund.assert_called_once_with(
+            payment_intent='pi_123',
+            idempotency_key=f'booking-cancellation-{booking.id}',
+        )
+        mock_send_mail.assert_called_once()
+
+    @patch('events.views.send_mail')
+    @patch('events.views.stripe.Refund.create')
+    @patch('events.views.stripe.checkout.Session.retrieve')
+    def test_cancel_booking_retry_reuses_same_refund_idempotency_key(
+        self,
+        mock_retrieve,
+        mock_refund,
+        mock_send_mail,
+    ):
+        booking = Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=2,
+            stripe_session_id='cs_retry_cancel',
+        )
+
+        mock_retrieve.return_value = SimpleNamespace(
+            payment_intent='pi_retry'
+        )
+        mock_refund.return_value = SimpleNamespace(
+            id='re_retry'
+        )
+
+        self.client.force_login(self.user)
+
+        original_save = Booking.save
+        save_attempts = {'count': 0}
+
+        def flaky_save(instance, *args, **kwargs):
+            if save_attempts['count'] == 0:
+                save_attempts['count'] += 1
+                raise RuntimeError('Simulated local save failure')
+
+            return original_save(instance, *args, **kwargs)
+
+        with patch.object(
+            Booking,
+            'save',
+            autospec=True,
+            side_effect=flaky_save,
+        ):
+            with self.assertRaises(RuntimeError):
+                self.client.post(
+                    reverse(
+                        'cancel_booking',
+                        args=[booking.id],
+                    )
+                )
+
+            response = self.client.post(
+                reverse(
+                    'cancel_booking',
+                    args=[booking.id],
+                )
+            )
+
+        self.assertRedirects(
+            response,
+            reverse('profile'),
+        )
+
+        booking.refresh_from_db()
+
+        self.assertEqual(
+            booking.status,
+            'cancelled',
+        )
+        self.assertEqual(
+            booking.stripe_refund_id,
+            're_retry',
+        )
+
+        self.assertEqual(
+            mock_refund.call_count,
+            2,
+        )
+
+        expected_call = call(
+            payment_intent='pi_retry',
+            idempotency_key=(
+                f'booking-cancellation-{booking.id}'
+            ),
+        )
+
+        self.assertEqual(
+            mock_refund.call_args_list,
+            [
+                expected_call,
+                expected_call,
+            ],
+        )
+
         mock_send_mail.assert_called_once()
 
     @patch('events.views.send_mail')
@@ -263,5 +360,8 @@ class EventViewTests(TestCase):
         self.assertEqual(booking.status, 'cancelled')
         self.assertEqual(booking.stripe_refund_id, 're_456')
         self.assertIsNotNone(booking.cancelled_at)
-        mock_refund.assert_called_once_with(payment_intent='pi_456')
+        mock_refund.assert_called_once_with(
+            payment_intent='pi_456',
+            idempotency_key=f'booking-cancellation-{booking.id}',
+        )
         mock_send_mail.assert_called_once()

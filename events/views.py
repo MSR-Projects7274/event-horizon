@@ -138,7 +138,8 @@ def cancel_booking(request, booking_id):
                 )
 
             refund = stripe.Refund.create(
-                payment_intent=payment_intent
+                payment_intent=payment_intent,
+                idempotency_key=f'booking-cancellation-{booking.id}',
             )
 
             booking.status = 'cancelled'
