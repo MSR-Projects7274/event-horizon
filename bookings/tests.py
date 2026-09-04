@@ -149,6 +149,28 @@ class CheckoutViewTests(TestCase):
             f'http://testserver/events/{self.event.id}/',
         )
 
+    @patch('bookings.views.stripe.checkout.Session.create')
+    def test_checkout_redirects_to_event_when_stripe_fails(
+        self,
+        mock_create,
+    ):
+        mock_create.side_effect = stripe.error.APIConnectionError(
+            'Temporary Stripe failure'
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('create_checkout_session', args=[self.event.id]),
+            {'quantity': 1},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('event_detail', args=[self.event.id]),
+        )
+
+        mock_create.assert_called_once()
+
     def test_booking_success_requires_session_id(self):
         self.client.force_login(self.user)
 
