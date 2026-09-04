@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -93,7 +94,8 @@ class Booking(models.Model):
     )
 
     quantity = models.PositiveIntegerField(
-        default=1
+        default=1,
+        validators=[MinValueValidator(1)],
     )
 
     stripe_session_id = models.CharField(
@@ -121,6 +123,14 @@ class Booking(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(quantity__gte=1),
+                name='booking_quantity_gte_1',
+            ),
+        ]
 
     @property
     def total_price(self):

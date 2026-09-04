@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import call, patch
 
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -17,7 +18,7 @@ class EventModelTests(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            username='pixel',
+            username='test',
             password='StrongPass123!',
         )
         self.category = Category.objects.create(name='Adventure')
@@ -66,7 +67,16 @@ class EventModelTests(TestCase):
         )
 
         self.assertEqual(booking.total_price, Decimal('60.00'))
-        self.assertEqual(str(booking), 'pixel - Kayaking Experience')
+        self.assertEqual(str(booking), 'test - Kayaking Experience')
+
+    def test_booking_quantity_cannot_be_zero(self):
+        with self.assertRaises(IntegrityError):
+            Booking.objects.create(
+                user=self.user,
+                event=self.event,
+                quantity=0,
+                stripe_session_id='cs_zero_quantity',
+        )
 
 
 class EventViewTests(TestCase):
@@ -74,8 +84,8 @@ class EventViewTests(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            username='pixel',
-            email='pixel@example.com',
+            username='test',
+            email='test@example.com',
             password='StrongPass123!',
         )
         self.other_user = User.objects.create_user(
