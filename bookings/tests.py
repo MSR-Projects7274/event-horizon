@@ -1,5 +1,6 @@
 from datetime import time, timedelta
 from decimal import Decimal
+from smtplib import SMTPDataError
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -392,3 +393,38 @@ class WebhookTests(TestCase):
         self.assertFalse(
             Booking.objects.filter(stripe_session_id='cs_over_capacity').exists()
         )
+
+    @patch('bookings.webhook.send_mail')
+    @patch('bookings.webhook.stripe.Webhook.construct_event')
+    def test_paid_checkout_still_succeeds_when_confirmation_email_fails(
+        self,
+        mock_construct_event,
+        mock_send_mail,
+    ):
+        session = self.stripe_session(quantity='2')
+        mock_construct_event.return_value = self.stripe_event(session)
+
+        mock_send_mail.side_effect = SMTPDataError(
+            550,
+            b'Invalid recipient',
+        )
+
+        response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        booking = Booking.objects.get(
+            stripe_session_id='cs_webhook'
+        )
+
+        self.assertEqual(booking.user, self.user)
+        self.assertEqual(booking.event, self.event)
+        self.assertEqual(booking.quantity, 2)
+        self.assertEqual(booking.status, 'confirmed')
+
+        mock_send_mail.assert_called_once()

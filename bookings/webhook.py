@@ -1,3 +1,6 @@
+import logging
+from smtplib import SMTPException
+
 import stripe
 
 from django.conf import settings
@@ -11,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from events.models import Booking, Event
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -139,12 +143,17 @@ def stripe_webhook(request):
             'Discover experiences beyond the ordinary.'
         )
 
-        send_mail(
-            subject='Your Event Horizon booking is confirmed',
-            message=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[customer_email],
-            html_message=html_message,
-        )
-
+        try:
+            send_mail(
+                subject='Your Event Horizon booking is confirmed',
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[customer_email],
+                html_message=html_message,
+            )
+        except (SMTPException, OSError):
+            logger.exception(
+                'Booking confirmation email failed for Stripe session %s',
+                session_id,
+            )
     return HttpResponse(status=200)
