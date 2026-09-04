@@ -178,6 +178,60 @@ class CheckoutViewTests(TestCase):
 
         self.assertRedirects(response, reverse('event_list'))
 
+    def test_booking_success_shows_pending_state_when_booking_is_delayed(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse('booking_success'),
+            {'session_id': 'cs_delayed_webhook'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            'bookings/booking_success.html',
+        )
+        self.assertIsNone(response.context['booking'])
+        self.assertEqual(
+            response.context['session_id'],
+            'cs_delayed_webhook',
+        )
+        self.assertContains(
+            response,
+            "We're finalising your booking",
+        )
+
+    def test_booking_success_shows_cancelled_state_for_refunded_booking(self):
+        booking = Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=1,
+            stripe_session_id='cs_refunded_booking',
+            status='cancelled',
+            stripe_refund_id='re_refunded_booking',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse('booking_success'),
+            {'session_id': booking.stripe_session_id},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['booking'])
+        self.assertEqual(
+            response.context['cancelled_booking'],
+            booking,
+        )
+        self.assertContains(
+            response,
+            'Your booking could not be completed',
+        )
+        self.assertNotContains(
+            response,
+            "You're going!",
+        )
+
     def test_booking_success_displays_users_booking(self):
         booking = Booking.objects.create(
             user=self.user,

@@ -2,6 +2,7 @@ import stripe
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -111,16 +112,31 @@ def booking_success(request):
     if not session_id:
         return redirect('event_list')
 
-    booking = get_object_or_404(
-        Booking,
+    booking = Booking.objects.filter(
         stripe_session_id=session_id,
-        user=request.user,
-    )
+    ).first()
+
+    if (
+        booking is not None
+        and booking.user_id != request.user.id
+    ):
+        raise Http404
+
+    confirmed_booking = None
+    cancelled_booking = None
+
+    if booking is not None:
+        if booking.status == 'cancelled':
+            cancelled_booking = booking
+        else:
+            confirmed_booking = booking
 
     return render(
         request,
         'bookings/booking_success.html',
         {
-            'booking': booking,
+            'booking': confirmed_booking,
+            'cancelled_booking': cancelled_booking,
+            'session_id': session_id,
         }
     )

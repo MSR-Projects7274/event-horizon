@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Booking Confirmed | Event Horizon{% endblock %}
+{% block title %}
+    {% if booking %}
+        Booking Confirmed | Event Horizon
+    {% elif cancelled_booking %}
+        Booking Cancelled | Event Horizon
+    {% else %}
+        Booking Processing | Event Horizon
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 
@@ -8,90 +16,168 @@
 
     <div class="booking-success-card">
 
-        <div class="booking-success-icon">
-            <i class="fas fa-check"></i>
-        </div>
+        {% if booking %}
 
-        <p class="event-category">
-            Booking Confirmed
-        </p>
-
-        <h1>You're going!</h1>
-
-        <p class="booking-success-intro">
-            Your payment has been received and your place is confirmed.
-        </p>
-
-        <div class="booking-details">
-
-            <h2>{{ booking.event.name }}</h2>
-
-            <div class="booking-detail">
-                <strong>Date</strong>
-                <span>
-                    {{ booking.event.date|date:"l, j F Y" }}
-                </span>
+            <div class="booking-success-icon">
+                <i class="fas fa-check"></i>
             </div>
 
-            <div class="booking-detail">
-                <strong>Time</strong>
-                <span>
-                    {{ booking.event.time|time:"H:i" }}
-                </span>
+            <p class="event-category">
+                Booking Confirmed
+            </p>
+
+            <h1>You're going!</h1>
+
+            <p class="booking-success-intro">
+                Your payment has been received and your place is confirmed.
+            </p>
+
+            <div class="booking-details">
+
+                <h2>{{ booking.event.name }}</h2>
+
+                <div class="booking-detail">
+                    <strong>Date</strong>
+                    <span>
+                        {{ booking.event.date|date:"l, j F Y" }}
+                    </span>
+                </div>
+
+                <div class="booking-detail">
+                    <strong>Time</strong>
+                    <span>
+                        {{ booking.event.time|time:"H:i" }}
+                    </span>
+                </div>
+
+                <div class="booking-detail">
+                    <strong>Location</strong>
+                    <span>
+                        {{ booking.event.location }}
+                    </span>
+                </div>
+
+                <div class="booking-detail">
+                    <strong>Places</strong>
+                    <span>
+                        {{ booking.quantity }}
+                    </span>
+                </div>
+
+                <div class="booking-detail">
+                    <strong>Price per place</strong>
+                    <span>
+                        £{{ booking.event.price|floatformat:2 }}
+                    </span>
+                </div>
+
+                <div class="booking-detail booking-total">
+                    <strong>Total paid</strong>
+                    <span>
+                        £{{ booking.total_price|floatformat:2 }}
+                    </span>
+                </div>
+
             </div>
 
-            <div class="booking-detail">
-                <strong>Location</strong>
-                <span>
-                    {{ booking.event.location }}
-                </span>
+            <p class="booking-reference">
+                Booking reference:
+                <strong>{{ booking.stripe_session_id }}</strong>
+            </p>
+
+            <div class="booking-success-actions">
+
+                <a
+                    href="{% url 'profile' %}"
+                    class="btn btn-primary"
+                >
+                    View My Bookings
+                </a>
+
+                <a
+                    href="{% url 'event_list' %}"
+                    class="btn btn-secondary"
+                >
+                    Explore More Events
+                </a>
+
+            </div>
+        {% elif cancelled_booking %}
+
+            <p class="event-category">
+                Booking Cancelled
+            </p>
+
+            <h1>Your booking could not be completed</h1>
+
+            <p class="booking-success-intro">
+                Your payment was received, but the event no longer had enough
+                remaining places to complete your booking.
+            </p>
+
+            <p>
+                A refund has been requested automatically.
+            </p>
+
+            <p class="booking-reference">
+                Booking reference:
+                <strong>{{ cancelled_booking.stripe_session_id }}</strong>
+            </p>
+
+            <div class="booking-success-actions">
+
+                <a
+                    href="{% url 'profile' %}"
+                    class="btn btn-primary"
+                >
+                    View My Bookings
+                </a>
+
+                <a
+                    href="{% url 'event_list' %}"
+                    class="btn btn-secondary"
+                >
+                    Explore More Events
+                </a>
+
             </div>
 
-            <div class="booking-detail">
-                <strong>Places</strong>
-                <span>
-                    {{ booking.quantity }}
-                </span>
+        {% else %}
+
+            <p class="event-category">
+                Booking Processing
+            </p>
+
+            <h1>We're finalising your booking</h1>
+
+            <p class="booking-success-intro">
+                Your booking confirmation is still being processed.
+            </p>
+
+            <p>
+                This normally takes only a moment. Refresh this page to check
+                again.
+            </p>
+
+            <div class="booking-success-actions">
+
+                <a
+                    href="{% url 'booking_success' %}?session_id={{ session_id }}"
+                    class="btn btn-primary"
+                >
+                    Refresh Confirmation
+                </a>
+
+                <a
+                    href="{% url 'profile' %}"
+                    class="btn btn-secondary"
+                >
+                    View My Bookings
+                </a>
+
             </div>
 
-            <div class="booking-detail">
-                <strong>Price per place</strong>
-                <span>
-                    £{{ booking.event.price|floatformat:2 }}
-                </span>
-            </div>
-
-            <div class="booking-detail booking-total">
-                <strong>Total paid</strong>
-                <span>
-                    £{{ booking.total_price|floatformat:2 }}
-                </span>
-            </div>
-
-        </div>
-
-        <p class="booking-reference">
-            Booking reference:
-            <strong>{{ booking.stripe_session_id }}</strong>
-        </p>
-
-        <div class="booking-success-actions">
-
-            <a
-                href="{% url 'profile' %}"
-                class="btn btn-primary"
-            >
-                View My Bookings
-            </a>
-
-            <a
-                href="{% url 'event_list' %}"
-                class="btn btn-secondary"
-            >
-                Explore More Events
-            </a>
-
-        </div>
+        {% endif %}
 
     </div>
 
