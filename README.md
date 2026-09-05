@@ -12,6 +12,8 @@
 - [Built With](#built-with)
 - [Libraries Used](#libraries-used)
 - [Project Structure](#project-structure)
+- [Development Rationale](#development-rationale)
+- [Backend and Frontend Integration](#backend-and-frontend-integration)
 - [Database Schema](#database-schema)
 - [Viewing the Site Locally](#viewing-the-site-locally)
 - [Deployment](#deployment)
@@ -388,6 +390,265 @@ The main areas of the project include:
 
 - **Templates**  
   Contains the HTML templates used to render the site's pages.
+
+* * *
+
+# Development Rationale
+
+<details>
+<summary><strong>Click to expand development rationale</strong></summary>
+
+<br>
+
+Event Horizon was designed as a database-driven full-stack application rather than a collection of static event pages. The central event catalogue, booking records and user accounts all represent information that changes over time, so Django and a relational database were used to keep this data consistent and allow it to be managed centrally.
+
+## Application Structure
+
+The project is divided into separate Django applications for `home`, `events`, `bookings` and `profiles`.
+
+This separation was chosen so that each application has a clear responsibility:
+
+* `home` handles the homepage and high-level event discovery;
+* `events` manages event and category data, event presentation, availability and cancellation behaviour;
+* `bookings` handles Stripe Checkout, payment confirmation and the payment webhook flow;
+* `profiles` manages account-related functionality and presents a user's booking information.
+
+Separating these areas reduces the amount of unrelated logic contained in a single application and makes individual features easier to understand, test and maintain.
+
+The main `event_horizon` project contains configuration that applies across the whole application, including settings and top-level URL routing.
+
+## Relational Data Model
+
+A relational structure was chosen because the core data is naturally connected.
+
+Categories contain multiple events, events can have multiple bookings, and each booking belongs to both an event and an authenticated user.
+
+The `Booking` model acts as the link between a user and an event while also storing transaction-related information such as quantity, booking status, Stripe session information and refund information.
+
+Availability is calculated from the event's capacity and its confirmed bookings rather than being stored as a second independent value. This reduces the risk of two different availability values becoming inconsistent.
+
+Business rules are also enforced at more than one layer where appropriate. For example, invalid booking quantities are rejected during the booking flow, while the data model also requires a booking quantity of at least one.
+
+## Authentication and Paid Access
+
+Visitors are deliberately allowed to explore the event catalogue before registering. This allows the value of the service to be visible before an account is required.
+
+Authentication becomes necessary when a user attempts to book an event or manage personal booking information. This keeps public discovery accessible while protecting actions and data that belong to an individual account.
+
+The profile area then provides a single location where authenticated users can review and manage their bookings.
+
+## Stripe Checkout and Webhook Confirmation
+
+Stripe Checkout was chosen so that payment-card handling is delegated to a specialist payment provider rather than being implemented directly within Event Horizon.
+
+Reaching the Stripe checkout page is not treated as proof of payment. The application waits for Stripe's webhook confirmation before creating a confirmed booking.
+
+This separation was intentional because a user can leave or cancel Checkout before completing payment. Creating the booking only after successful payment confirmation prevents incomplete checkouts from occupying event capacity.
+
+Additional payment safeguards were added during development to account for real-world failure conditions. These include duplicate webhook protection, retry-safe refunds, capacity checks after payment, graceful handling of external email or Stripe failures and automatic refunds when a paid booking can no longer be fulfilled.
+
+## Capacity and Booking Status
+
+Event capacity is treated as business data rather than only a visual feature.
+
+Confirmed bookings contribute to the number of places booked, while cancelled bookings do not. This means cancellation automatically releases the associated places back into availability.
+
+Capacity is checked before Checkout begins and again when the payment webhook is processed. The second check is important because availability may have changed while a customer was completing payment.
+
+Sold-out presentation in the interface is therefore driven by the same underlying booking data used by the backend rather than being maintained separately.
+
+## Administrator Management
+
+Django Admin is used for administrator-facing data management rather than recreating a separate custom administration system.
+
+This provides authenticated administrative CRUD functionality for the centrally owned event dataset while allowing development effort to focus on the customer-facing event discovery, booking and payment experience.
+
+## Interface and Visual Rationale
+
+The standard Event Horizon interface was intentionally designed to feel clear and familiar so that event discovery and payment actions remain straightforward.
+
+The **Not For The Faint Of Heart** category provides a deliberate contrast. Its visual glitches and darker presentation alter the atmosphere without replacing the underlying navigation, event or booking architecture.
+
+This allows the project to develop a distinctive identity while maintaining consistent functionality and usability across the application.
+
+## External Services and Production Design
+
+Uploaded event media is separated from the application code through external storage using Amazon S3. This is more appropriate for a deployed application than relying on temporary local application storage.
+
+Environment variables are used for configuration such as database credentials, Stripe credentials and storage credentials so that sensitive configuration is kept outside the source code.
+
+Overall, the architecture was chosen to keep presentation, business logic, persistent data and external services clearly separated while still allowing them to work together as one full-stack application.
+
+</details>
+
+---
+
+# Backend and Frontend Integration
+
+<details>
+<summary><strong>Click to expand backend and frontend integration</strong></summary>
+
+<br>
+
+Event Horizon uses Django's request-response architecture to connect the browser interface to backend application logic and database data.
+
+The frontend is primarily rendered using Django templates. These templates receive prepared context from Django views and display information using HTML, CSS and JavaScript. Business rules, database queries, payment handling and data mutations remain in the backend rather than being implemented inside the templates.
+
+A typical request follows this flow:
+
+```text
+Browser request
+      ↓
+Django URL routing
+      ↓
+View
+      ↓
+Models / database / forms / external service where required
+      ↓
+View prepares context or redirect
+      ↓
+Django template
+      ↓
+HTML response
+      ↓
+Browser
+```
+
+## Event Discovery Flow
+
+When a visitor opens the homepage or event catalogue, the browser sends a request to Django.
+
+The matching URL directs the request to the appropriate view. The view retrieves the required event and category records from the database, applying rules such as active-event filtering, search terms or category filters.
+
+The resulting data is passed to a Django template as context.
+
+The template then renders event cards, availability, categories and navigation controls for the user. CSS controls the presentation and responsive layout, while JavaScript is used for appropriate interactive and visual behaviour.
+
+The frontend therefore does not contain its own independent event dataset. What the user sees is generated from the backend data.
+
+## Search and Category Filtering
+
+Search and category selections originate in the browser as request parameters.
+
+Django receives those values and uses them to filter the event queryset on the backend. The resulting matching events are then passed back to the same presentation layer.
+
+This keeps filtering rules close to the database rather than requiring the browser to download the complete dataset and reproduce the business logic client-side.
+
+## Event Availability
+
+Availability shown on event cards and event-detail pages comes from backend model data.
+
+The application derives booked places from confirmed bookings and compares this with the event capacity to determine remaining availability.
+
+Templates use the resulting values to alter presentation, including disabling booking access and showing the sold-out treatment when no places remain.
+
+This creates a direct relationship between backend state and frontend feedback:
+
+```text
+Confirmed bookings
+        ↓
+Backend availability calculation
+        ↓
+View context
+        ↓
+Template
+        ↓
+Available / Sold Out interface
+```
+
+## Booking and Payment Flow
+
+The booking flow crosses both the frontend and several backend components.
+
+1. The user selects an event and booking quantity through the rendered interface.
+2. The request is sent to the Django backend.
+3. Django validates authentication, quantity, email requirements and remaining capacity.
+4. The backend creates a Stripe Checkout Session.
+5. The browser is redirected to Stripe's hosted Checkout interface.
+6. Stripe processes the payment outside the Event Horizon application.
+7. After payment, Stripe sends a webhook to the Event Horizon backend.
+8. The webhook validates the event and payment state before creating the booking.
+9. The browser returns to the booking-success flow.
+10. The success template displays the confirmed booking, a processing state if webhook completion is delayed, or the appropriate cancelled/refunded state if the booking could not be fulfilled.
+
+The Stripe webhook, rather than the browser redirect, is therefore the authoritative backend confirmation that payment succeeded.
+
+## Cancellation and Refund Flow
+
+Cancellation also begins in the frontend but is controlled by backend logic.
+
+The user opens the cancellation page for one of their own bookings and submits the cancellation request.
+
+Django verifies booking ownership before retrieving the associated Stripe payment information and requesting the refund.
+
+After a successful refund, the backend updates the booking status and refund information. Because availability is calculated using confirmed bookings only, the cancelled places automatically become available again.
+
+The user is then redirected to their profile, where the updated database state is reflected in the interface.
+
+## Profiles
+
+The profile page demonstrates the relationship between authentication, backend filtering and frontend presentation.
+
+Django identifies the authenticated user and retrieves only booking information associated with that account. The view passes those records to the profile template, which renders them as the user's booking history and management options.
+
+Ownership checks are also performed in the backend for protected actions such as cancellation, preventing another user's booking from being exposed simply by changing a URL.
+
+## Templates and Static Assets
+
+Django templates are responsible for presentation rather than application business logic.
+
+They perform limited display operations such as:
+
+* rendering values supplied by views;
+* looping through event or booking collections;
+* conditionally displaying interface states;
+* rendering forms and CSRF protection;
+* generating internal links using Django URL names.
+
+CSS controls layout, styling and responsive behaviour, while JavaScript provides client-side interaction and the special visual effects used by the **Not For The Faint Of Heart** experience.
+
+Database filtering, permission checks, capacity rules, booking mutation, Stripe operations and refund logic remain on the backend.
+
+## Administrator Data Flow
+
+Django Admin provides a separate authenticated interface over the same underlying database models.
+
+When an administrator creates or edits an event, the updated database record is then used automatically by the customer-facing views.
+
+For example:
+
+```text
+Administrator edits event
+        ↓
+Database record updated
+        ↓
+Customer requests event catalogue
+        ↓
+Django retrieves updated record
+        ↓
+Template renders new information
+```
+
+This means administrators do not need to manually edit customer-facing HTML when event data changes.
+
+## Separation of Responsibilities
+
+The final implementation maintains a clear division between the main layers:
+
+| Layer                 | Responsibility                                                                                 |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| **Models / Database** | Persistent event, category, booking and user-related data, relationships and data rules        |
+| **Views**             | Request handling, queries, permissions, validation, business decisions and context preparation |
+| **Forms**             | User-input validation where form-based input is required                                       |
+| **Templates**         | Presentation of backend-prepared data                                                          |
+| **CSS / JavaScript**  | Styling, responsive behaviour and client-side interaction                                      |
+| **Stripe**            | Hosted payment processing and payment/refund operations                                        |
+| **Amazon S3**         | Persistent uploaded media storage                                                              |
+| **Django Admin**      | Administrator management of centrally owned application data                                   |
+
+This separation allows the frontend to remain focused on user interaction while the backend remains authoritative for application state, permissions, payments and business rules.
+
+</details>
 
 * * *
 
