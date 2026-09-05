@@ -22,6 +22,7 @@
 - [User Story Mapping](#user-story-mapping)
 - [User Story Validation](#user-story-validation)
 - [Wireframes](#wireframes)
+- [Design and Final Implementation Comparison](#design-and-final-implementation-comparison)
 - [Testing](#testing)
 - [Development Challenges](#development-challenges)
 - [Lessons Learned](#lessons-learned)
@@ -1030,6 +1031,95 @@ Each user story was tested against the functionality implemented in the final ap
 The wireframes used during development will be included in this section to demonstrate the original layout and design planning for the project.
 
 Screenshots of the final implemented pages will also be included where appropriate to demonstrate how the original design developed into the finished application.
+
+* * *
+
+# Design and Final Implementation Comparison
+
+<details>
+<summary><strong>Click to expand design and final implementation comparison</strong></summary>
+
+<br>
+
+The original planning for Event Horizon established the core purpose of the application: a clear event-discovery experience where users could browse events, view event information and progress towards booking.
+
+During development, the design was refined as the underlying booking, payment and availability functionality became more complete. The final application therefore retains the original direction while expanding several areas beyond the initial design.
+
+| Area                               | Initial Direction                                                                  | Final Implementation                                                                                                                                                                  | Reason for Development                                                                                                                                     |
+| ---------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Overall interface**              | A straightforward event-booking website with clear navigation and event discovery. | The main interface retains a clean and familiar presentation, while the **Not For The Faint Of Heart** category introduces a deliberately darker and more disrupted visual treatment. | The contrast gives the project a stronger identity without making the core booking experience difficult to use.                                            |
+| **Homepage**                       | A starting point for users to discover events.                                     | The homepage includes featured events, a scrolling event ticker, category discovery, calls to action and dynamically retrieved event content.                                         | The homepage was expanded so that it acts as a stronger discovery area rather than simply presenting a basic event list.                                   |
+| **Event catalogue**                | A central area for browsing available events.                                      | The catalogue is database-driven and includes search, category filtering, availability information and links to detailed event pages.                                                 | As more events and categories were introduced, users needed better ways to find relevant content without manually browsing every event.                    |
+| **Event cards**                    | Compact summaries linking users to event details.                                  | Cards display key event information such as category, date, location, price and availability, with dedicated sold-out presentation where required.                                    | Availability became an important part of the booking system, so the interface needed to communicate event status before the user entered the booking flow. |
+| **Booking process**                | Users would be able to select and book places at events.                           | Booking uses Stripe Checkout, followed by webhook confirmation before a confirmed booking is created.                                                                                 | The final approach ensures that reaching Checkout is not mistaken for successful payment and prevents incomplete payments from occupying event capacity.   |
+| **Event capacity**                 | Events would have a maximum number of available places.                            | Remaining availability is calculated dynamically from event capacity and confirmed bookings. Capacity is checked both before Checkout and when the payment webhook is processed.      | Dynamic capacity became necessary to prevent overselling and to keep availability consistent when bookings are created or cancelled.                       |
+| **Sold-out events**                | Booking would no longer be available once capacity was reached.                    | Sold-out cards are visually muted and display a dedicated sold-out treatment, while booking controls are disabled or unavailable.                                                     | A visual state was added so that users can understand why an event cannot be booked without discovering this only after attempting the action.             |
+| **User accounts**                  | Registered users would be able to access booking functionality.                    | Authentication protects booking and profile functionality, while public visitors can continue browsing and searching the catalogue.                                                   | Keeping discovery public allows users to understand the value of the service before registration is required.                                              |
+| **Profile and booking management** | Users would be associated with the bookings they made.                             | The profile provides account information, confirmed and cancelled booking information, event links and cancellation controls where applicable.                                        | Booking management developed into a dedicated user-facing area so that customers could review and manage their purchases after Checkout.                   |
+| **Booking cancellation**           | Users would be able to manage eligible bookings.                                   | Cancellation includes booking ownership checks, Stripe refunds, status updates and automatic restoration of released event capacity.                                                  | Cancellation needed to affect both the financial transaction and the underlying capacity data rather than being only a visual status change.               |
+| **Special-event experience**       | The project would have a distinctive Event Horizon identity.                       | The **Not For The Faint Of Heart** category introduces restrained glitches, shifts and darker styling while retaining the same navigation and booking architecture.                   | The effect was kept deliberately localised so the unusual presentation adds character without compromising usability throughout the rest of the website.   |
+| **Responsive layout**              | Pages would need to remain usable across common screen sizes.                      | Navigation, cards, authentication pages, profiles, event details and booking interfaces were repeatedly refined for desktop, tablet and mobile layouts.                               | Responsive behaviour required practical adjustment once real content, controls and user journeys were available to test at different viewport sizes.       |
+| **Event media**                    | Events would be presented with appropriate imagery.                                | Uploaded event media is configured to use Amazon S3 rather than relying on the application's local filesystem.                                                                        | External media storage provides a more suitable architecture for the deployed application and avoids dependence on temporary Heroku filesystem storage.    |
+
+## Design Decisions Retained
+
+Several principles from the original direction remained consistent throughout development.
+
+The application continues to prioritise:
+
+* straightforward event discovery;
+* clear navigation;
+* event information presented in reusable cards and detail pages;
+* a visible route from discovery to booking;
+* a clean standard interface;
+* responsive usability across different screen sizes.
+
+The final implementation therefore represents an evolution of the original concept rather than a replacement of it.
+
+## Changes Driven by Functionality
+
+Some visual and structural changes occurred because functionality developed beyond the earliest planning.
+
+For example, introducing real capacity management created the need for remaining-place information and a dedicated sold-out state. Adding Stripe payment confirmation required booking-success, processing and refund states that could not be represented by a simple static booking page.
+
+Similarly, cancellation became more than a profile control once it needed to interact with Stripe refunds and release event capacity.
+
+These changes demonstrate how the interface evolved in response to the application's business logic rather than being developed independently from it.
+
+## Changes Driven by User Experience
+
+Other changes were made to make the application easier to understand and navigate.
+
+Search and category filtering were expanded so that users could find events more efficiently. Availability was surfaced before Checkout so that booking restrictions were clear earlier in the journey.
+
+The sold-out visual treatment was added for the same reason: preventing an unavailable action in the backend is necessary, but communicating that state clearly in the frontend provides a better experience.
+
+## Visual Evolution
+
+The final visual design also developed beyond the standard event-booking presentation.
+
+The **Not For The Faint Of Heart** experience became a deliberate visual contrast to the rest of Event Horizon. Rather than applying the effect globally, the darker and glitching presentation is associated specifically with relevant events.
+
+This preserves the familiar structure of the main application while allowing the project to introduce a distinctive visual identity in a controlled way.
+
+## Final Outcome
+
+The finished application retains the central goals established during planning but includes additional functionality and interface states that emerged through implementation and testing.
+
+The differences between the initial design and final application primarily reflect:
+
+* increased functionality;
+* stronger payment and booking reliability;
+* more complete event-capacity management;
+* clearer user feedback;
+* improved event discovery;
+* responsive refinements;
+* deployment requirements;
+* development of the project's distinctive visual identity.
+
+Wireframes and final screenshots provide the visual evidence for this progression, while the comparison above documents the reasoning behind the most significant changes.
+
+</details>
 
 * * *
 
