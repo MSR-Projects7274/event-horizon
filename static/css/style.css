@@ -718,19 +718,6 @@ footer {
     text-transform: uppercase;
 }
 
-
-/* Special Events */
-
-.home-event-special-label {
-    display: inline-block;
-    align-self: flex-start;
-    margin-bottom: 0.75rem;
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-}
-
 /* Sold Out Events */
 
 .home-event-card-sold-out {
@@ -739,51 +726,6 @@ footer {
 
 .home-event-card-sold-out:hover {
     opacity: 0.85;
-}
-
-
-/* Special Event Glitch Effect */
-
-.home-event-card-special .home-event-card-content {
-    position: relative;
-}
-
-.home-event-card-special h3 {
-    transition: transform 0.2s ease;
-}
-
-.home-event-card-special:hover h3 {
-    transform: translateX(2px);
-}
-
-.home-event-card-special .home-event-special-label {
-    animation: specialLabelFlicker 4s infinite;
-}
-
-@keyframes specialLabelFlicker {
-
-    0%,
-    92%,
-    100% {
-        opacity: 0.7;
-        transform: translateX(0);
-    }
-
-    93% {
-        opacity: 0.3;
-        transform: translateX(-1px);
-    }
-
-    94% {
-        opacity: 0.9;
-        transform: translateX(1px);
-    }
-
-    95% {
-        opacity: 0.4;
-        transform: translateX(0);
-    }
-
 }
 
 /* Discover Section */

@@ -133,8 +133,7 @@
 
             <article
                 class="home-event-card
-                {% if places_remaining <= 0 %}home-event-card-sold-out{% endif %}
-                {% if event.is_special %}home-event-card-special{% endif %}"
+                {% if places_remaining <= 0 %}home-event-card-sold-out{% endif %}"
             >
 
                 {% if event.image %}
@@ -162,15 +161,6 @@
 
 
                 <div class="home-event-card-content">
-
-                    {% if event.is_special %}
-
-                        <span class="home-event-special-label">
-                            Not for the faint of heart
-                        </span>
-
-                    {% endif %}
-
 
                     <p class="event-category">
                         {{ event.category.name }}
@@ -210,6 +200,7 @@
                             <span class="home-event-status">
                                 {{ places_remaining }} place{{ places_remaining|pluralize }} left
                             </span>
+
                         {% endif %}
 
                     </div>
@@ -225,6 +216,7 @@
                 </div>
 
             </article>
+
             {% endwith %}
         {% endfor %}
 
@@ -245,7 +237,6 @@
 </section>
 
 {% endif %}
-
 
 <section class="home-discover-section">
 
