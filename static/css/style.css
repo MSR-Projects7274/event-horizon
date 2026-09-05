@@ -225,6 +225,144 @@ header {
     transform: translateY(-1px);
 }
 
+/* Login Page */
+
+.login-page {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+}
+
+.login-page .auth-card {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.login-page .auth-card h1 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.login-page .auth-card > p {
+    margin-bottom: 2rem;
+}
+
+.login-page .auth-card form {
+    width: 100%;
+}
+
+.login-page .auth-card form p {
+    margin-bottom: 1.25rem;
+    text-align: left;
+}
+
+.login-page .auth-card form label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.login-page .auth-card form input {
+    width: 100%;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--eh-border-dark);
+    border-radius: var(--eh-radius-small);
+    background-color: var(--eh-surface);
+    color: var(--eh-text);
+    font: inherit;
+}
+
+.login-page .auth-card form input:focus {
+    outline: none;
+    border-color: var(--eh-accent);
+    box-shadow: 0 0 0 3px var(--eh-accent-soft);
+}
+
+.login-page .auth-card .auth-button {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+/* Register Page */
+
+.register-page {
+    width: 100%;
+    padding: 1.5rem 1rem 2rem;
+}
+
+.register-page .auth-card {
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.register-page .auth-card h1,
+.register-page .auth-card > p {
+    text-align: center;
+}
+
+.register-page .auth-card h1 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.register-page .auth-card > p {
+    margin-bottom: 1.25rem;
+}
+
+.register-page .auth-card form {
+    width: 100%;
+}
+
+.register-page .auth-card form p {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.register-page .auth-card form label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+}
+
+.register-page .auth-card form input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--eh-border-dark);
+    border-radius: var(--eh-radius-small);
+    background-color: var(--eh-surface);
+    color: var(--eh-text);
+    font: inherit;
+}
+
+.register-page .auth-card form input:focus {
+    outline: none;
+    border-color: var(--eh-accent);
+    box-shadow: 0 0 0 3px var(--eh-accent-soft);
+}
+
+.register-page .helptext {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--eh-text-muted);
+}
+
+.register-page .helptext ul {
+    margin: 0.4rem 0 0.75rem;
+    padding-left: 1.25rem;
+}
+
+.register-page .auth-card .auth-button {
+    width: 100%;
+    margin-top: 0.25rem;
+}
+
 .auth-nav-button {
     display: inline-block;
     padding: 0.45rem 0.9rem;
