@@ -776,7 +776,7 @@ Screenshots of the final implemented pages will also be included where appropria
 
 Event Horizon uses a combination of automated Django tests and manual browser-based testing.
 
-The automated test suite currently contains **44 passing tests** covering authentication, event discovery, booking behaviour, Stripe Checkout, webhook handling, refunds, capacity management and user permissions.
+The automated test suite currently contains **54 passing tests** covering authentication, event discovery, booking behaviour, Stripe Checkout, webhook handling, refunds, capacity management and user permissions.
 
 Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts and accessibility. **64 completed manual checks currently pass**, with event-image verification pending until final imagery is uploaded. Production-specific testing will be completed against the final Heroku deployment.
 

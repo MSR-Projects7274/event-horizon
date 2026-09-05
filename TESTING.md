@@ -19,7 +19,7 @@ Testing results in this document reflect tests that were actually carried out. I
   - [E. Administrator Functionality](#e-administrator-functionality)
   - [F. Validation, Feedback and Error Handling](#f-validation-feedback-and-error-handling)
   - [G. Responsive Design, Accessibility, Static Files and Media](#g-responsive-design-accessibility-static-files-and-media)
-- [Issue Discovered During Testing](#issue-discovered-during-testing)
+- [Issues Identified and Regression Tested](#issues-identified-and-regression-tested)
 - [Pending Testing](#pending-testing)
 - [Testing Summary](#testing-summary)
 
@@ -29,7 +29,7 @@ Testing results in this document reflect tests that were actually carried out. I
 
 Automated tests are implemented in the `tests.py` files for the `home`, `profiles`, `events` and `bookings` apps.
 
-The suite uses Django's `TestCase` together with `unittest.mock.patch` where external Stripe behaviour needs to be isolated. This allows payment, refund and webhook behaviour to be tested without contacting Stripe or creating real charges during the automated test run.
+The suite uses Django's `TestCase` together with `unittest.mock.patch` where external Stripe and email behaviour needs to be isolated. This allows payment, refund, webhook and failure-handling behaviour to be tested without contacting Stripe, creating real charges or relying on an external email provider during the automated test run.
 
 The full suite can be run with:
 
@@ -37,69 +37,81 @@ The full suite can be run with:
 python manage.py test
 ```
 
-Latest recorded result:
+Latest verified result:
 
 ```text
-Ran 44 tests in 77.630s
+Ran 54 tests
 
 OK
 ```
 
-All 44 automated tests passed.
+All **54 automated tests passed**.
 
-| App | Tests | Areas Covered |
-|---|---:|---|
-| `home` | 4 | Home page rendering, active and upcoming event filtering, featured-event limits and About page rendering. |
-| `profiles` | 9 | Registration, required email validation, anonymous-only login and registration access, protected profiles, booking ownership, profile updates and password changes. |
-| `events` | 15 | Model behaviour, capacity calculations, event discovery, inactive-event handling, booking access, sold-out behaviour, booking ownership, cancellation/refund handling and graceful cancellation-email failure handling. |
-| `bookings` | 16 | Stripe Checkout validation, quantities, capacity, reversed absolute URLs, booking confirmation ownership, webhook validation, unpaid events, duplicate webhook protection, capacity enforcement and confirmation-email triggering. |
-| **Total** | **44** | **Core application, authentication, booking, payment, refund and webhook behaviour.** |
+| App        |  Tests | Areas Covered                                                                                                                                                                                                                                                                                                  |
+| ---------- | -----: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `home`     |      4 | Home page rendering, active and upcoming event filtering, featured-event limits and About page rendering.                                                                                                                                                                                                      |
+| `profiles` |      9 | Registration, required email validation, anonymous-only login and registration access, protected profiles, booking ownership, profile updates and password changes.                                                                                                                                            |
+| `events`   |     17 | Model behaviour, capacity calculations, event discovery, inactive-event handling, booking access, sold-out behaviour, booking ownership, cancellation/refund handling, graceful email failure handling, idempotent cancellation refunds and minimum booking-quantity enforcement.                              |
+| `bookings` |     24 | Stripe Checkout validation and failure handling, quantities and capacity, reversed absolute URLs, booking-confirmation ownership and processing states, webhook validation, refund handling, missing-user/event recovery, duplicate and concurrent webhook protection and confirmation-email failure handling. |
+| **Total**  | **54** | **Core application, authentication, booking, payment, refund, webhook, failure-recovery and data-integrity behaviour.**                                                                                                                                                                                        |
 
 ## Automated Test Coverage
 
 The automated suite verifies behaviour including:
 
-- public home and About page rendering;
-- upcoming and active event filtering;
-- featured-event limits;
-- registration page access;
-- authenticated-user redirects away from login and registration;
-- required registration email validation;
-- valid user registration;
-- protected profile access;
-- profile booking ownership;
-- profile email updates;
-- password changes while preserving the session;
-- category and event string representations;
-- booked and remaining capacity calculations;
-- confirmed bookings being counted while cancelled bookings are excluded;
-- booking total-price calculation;
-- active-only event listings;
-- search by event name, description, location and category;
-- category filtering;
-- inactive event 404 handling;
-- authenticated booking access;
-- sold-out booking prevention;
-- GET-only booking-form behaviour;
-- prevention of access to another user's cancellation route;
-- successful refund and booking cancellation;
-- graceful handling of cancellation email failures;
-- authenticated access to Stripe Checkout;
-- invalid, zero, negative and malformed quantities;
-- requests above remaining event capacity;
-- missing customer email handling;
-- Stripe Checkout Session creation;
-- reversed absolute success and cancellation URLs;
-- booking-success session requirements;
-- booking-confirmation ownership;
-- malformed Stripe webhook payloads;
-- invalid Stripe webhook signatures;
-- ignored unrelated webhook event types;
-- ignored unpaid checkout sessions;
-- successful paid booking creation;
-- duplicate webhook protection;
-- webhook-side capacity enforcement;
-- confirmation email triggering.
+* public home and About page rendering;
+* upcoming and active event filtering;
+* featured-event limits;
+* registration page access;
+* authenticated-user redirects away from login and registration;
+* required registration email validation;
+* valid user registration;
+* protected profile access;
+* profile booking ownership;
+* profile email updates;
+* password changes while preserving the session;
+* category and event string representations;
+* booked and remaining capacity calculations;
+* confirmed bookings being counted while cancelled bookings are excluded;
+* booking total-price calculation;
+* database enforcement preventing zero-quantity bookings;
+* active-only event listings;
+* search by event name, description, location and category;
+* category filtering;
+* inactive event 404 handling;
+* authenticated booking access;
+* sold-out booking prevention;
+* GET-only booking-form behaviour;
+* prevention of access to another user's cancellation route;
+* successful refund and booking cancellation;
+* graceful handling of cancellation email failures;
+* deterministic Stripe idempotency keys for cancellation refunds;
+* safe cancellation retry when Stripe has refunded but the local booking update initially fails;
+* authenticated access to Stripe Checkout;
+* invalid, zero, negative and malformed checkout quantities;
+* requests above remaining event capacity;
+* missing customer email handling;
+* valid Stripe Checkout Session creation;
+* graceful handling of Stripe Checkout Session creation failures;
+* reversed absolute success and cancellation URLs;
+* booking-success session requirements;
+* booking-confirmation ownership;
+* delayed webhook handling after a successful Stripe redirect;
+* separate confirmed, processing and cancelled/refunded booking-success states;
+* malformed Stripe webhook payloads;
+* invalid Stripe webhook signatures;
+* ignored unrelated webhook event types;
+* ignored unpaid checkout sessions;
+* successful paid booking creation;
+* graceful handling of booking-confirmation email failures;
+* duplicate webhook protection;
+* concurrent duplicate webhook protection after acquiring the event lock;
+* webhook-side capacity enforcement;
+* automatic refunds when capacity becomes unavailable after payment;
+* retry-safe refunds when an automatic capacity refund temporarily fails;
+* automatic refunds when the booking user no longer exists;
+* automatic refunds when the referenced event becomes unavailable;
+* confirmation email triggering only for successfully fulfilled bookings.
 
 ## Stripe Mocking
 
@@ -107,11 +119,12 @@ External Stripe calls are mocked during automated testing.
 
 This allows the application to verify what would be sent to Stripe and how simulated Stripe responses are handled while ensuring the test suite:
 
-- does not create real payments;
-- does not issue real refunds;
-- does not require network access;
-- does not rely on a live Stripe account;
-- can reliably reproduce success and failure scenarios.
+* does not create real payments;
+* does not issue real refunds;
+* does not require network access;
+* does not rely on a live Stripe account;
+* can reliably reproduce success, failure and retry scenarios;
+* can verify Stripe idempotency keys without creating duplicate refund operations.
 
 Manual Stripe testing is also carried out separately using Stripe's test environment.
 
@@ -260,7 +273,9 @@ A total of **64 completed manual checks currently pass**. One media-related chec
 
 ---
 
-# Issue Discovered During Testing
+# Issues Identified and Regression Tested
+
+Testing and the subsequent robustness audit identified several failure paths that were not apparent during the initial successful user journeys. Each issue below was corrected and backed by automated regression coverage.
 
 ## Cancellation Email Failure After Successful Refund
 
@@ -273,35 +288,25 @@ SMTPDataError
 
 The refund itself had already succeeded, the booking had been marked as cancelled and the released places had been returned to the event capacity. However, the email exception propagated through the request and caused a server error instead of returning the user to the profile.
 
-### Impact
+Cancellation email delivery was changed so SMTP and connection failures are logged without undoing or obscuring the successful refund and cancellation.
 
-The financial and booking operations were successful, but the user-facing request incorrectly appeared to fail because the follow-up cancellation email could not be delivered.
+Manual tests D7 and D10 were repeated after the fix and passed.
 
-### Fix
+## Additional Robustness Regression Coverage
 
-Cancellation email delivery was changed so that SMTP and mail connection errors are handled gracefully after the refund and booking-state update.
+| Issue / Risk                                                                              | Resolution                                                                                                                                                            | Regression Evidence                                                                                                           |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Booking confirmation email fails after a successful webhook booking.                      | Confirmation-email failures are logged without changing the successful booking or causing the webhook to fail.                                                        | Test verifies the webhook still returns success and preserves the confirmed booking when email delivery raises an SMTP error. |
+| Event capacity disappears after a customer has already paid.                              | An over-capacity paid booking is recorded as cancelled and an automatic Stripe refund is requested. Failed refund attempts are retried safely.                        | Tests verify successful automatic refund and retry after a temporary Stripe API failure.                                      |
+| Stripe Checkout Session creation fails because of an API/network error.                   | Stripe exceptions are caught and the user is returned safely to the event page instead of receiving a server error.                                                   | Test simulates a Stripe API connection failure.                                                                               |
+| Stripe redirects the browser before the webhook has created the booking.                  | The success page displays a processing state instead of returning a false 404. Confirmed and cancelled/refunded bookings have separate states.                        | Tests cover delayed booking creation, confirmed ownership and cancelled/refunded presentation.                                |
+| The user account referenced by a paid webhook no longer exists.                           | The payment is automatically refunded rather than attempting an invalid booking insert.                                                                               | Test verifies no booking is created and the correct idempotent refund is requested.                                           |
+| The event referenced by a paid webhook is deleted or becomes inactive before fulfilment.  | The payment is automatically refunded and the webhook returns successfully when the refund succeeds.                                                                  | Test verifies an inactive event produces no booking and requests the correct refund.                                          |
+| Two copies of the same Stripe webhook arrive at nearly the same time.                     | The event row is locked and the booking session is checked again after acquiring the lock. Existing bookings are returned safely without duplicate creation or email. | Test simulates the first duplicate check missing the booking and the post-lock check finding it.                              |
+| Stripe successfully refunds a cancellation but the local booking save subsequently fails. | Cancellation refunds use a deterministic idempotency key based on the booking ID. A retry therefore refers to the same Stripe refund operation.                       | Test simulates a failed local save followed by a successful retry and verifies the same idempotency key is used twice.        |
+| A zero-quantity booking is created outside the normal checkout validation path.           | `Booking.quantity` now uses `MinValueValidator(1)` and a database `CheckConstraint` requiring `quantity >= 1`.                                                        | Test verifies a direct zero-quantity ORM insert raises `IntegrityError`.                                                      |
 
-The application now:
-
-1. processes the refund;
-2. marks the booking as cancelled;
-3. records the Stripe refund ID;
-4. restores the released event capacity;
-5. attempts to send the cancellation email;
-6. logs SMTP/connection failures without raising a user-facing server error;
-7. redirects the user back to their profile.
-
-A regression test was added to reproduce this exact failure mode.
-
-After the fix:
-
-```text
-Ran 44 tests in 77.630s
-
-OK
-```
-
-Manual tests D7 and D10 were then repeated and passed.
+These regression tests supplement the original functional tests by exercising failure recovery, retry safety, payment integrity and database-level business rules.
 
 ---
 
@@ -347,19 +352,21 @@ The production acceptance pass should include:
 
 Current verified testing status:
 
-| Testing Area | Result |
-|---|---:|
-| Automated Django tests | **44/44 passed** |
-| Authentication manual tests | **9/9 passed** |
-| Navigation/search manual tests | **10/10 passed** |
-| Booking/capacity manual tests | **10/10 passed** |
-| Payment/cancellation manual tests | **10/10 passed** |
-| Administrator manual tests | **8/8 passed** |
-| Validation/error-handling manual tests | **8/8 passed** |
-| Responsive/accessibility completed tests | **9/9 passed** |
-| Media tests | **1 pending** |
-| Production deployment tests | **Pending deployment** |
+| Testing Area                             |                 Result |
+| ---------------------------------------- | ---------------------: |
+| Automated Django tests                   |       **54/54 passed** |
+| Authentication manual tests              |         **9/9 passed** |
+| Navigation/search manual tests           |       **10/10 passed** |
+| Booking/capacity manual tests            |       **10/10 passed** |
+| Payment/cancellation manual tests        |       **10/10 passed** |
+| Administrator manual tests               |         **8/8 passed** |
+| Validation/error-handling manual tests   |         **8/8 passed** |
+| Responsive/accessibility completed tests |         **9/9 passed** |
+| Media tests                              |          **1 pending** |
+| Production deployment tests              | **Pending deployment** |
 
 **Current completed manual testing: 64/64 passed.**
 
-The automated and local manual testing phases are complete apart from final media verification. Production-specific checks will be added after the final Heroku deployment.
+Automated coverage now includes successful application behaviour together with regression tests for payment-service failures, email failures, refund retry safety, delayed webhook processing, concurrent duplicate webhook delivery and database-level booking validation.
+
+The local automated and manual testing phases are complete for the functionality tested so far, apart from final event-image verification. Production-specific acceptance checks will be completed after the final Heroku deployment.
