@@ -5,78 +5,49 @@
 {% block content %}
 
 <section class="cancel-booking-page">
+    <div class="cancel-booking-card">
 
-    <h1>Cancel Booking</h1>
+        <h1>Cancel Booking</h1>
 
-    {% if error_message %}
-        <div class="alert alert-danger">
-            {{ error_message }}
+        <p>
+            Are you sure you want to cancel your booking for:
+        </p>
+
+        <h2>{{ booking.event.name }}</h2>
+
+        <div class="cancel-booking-details">
+            <p><strong>Date:</strong> {{ booking.event.date|date:"M. j, Y" }}</p>
+            <p><strong>Time:</strong> {{ booking.event.time|time:"g:i a" }}</p>
+            <p><strong>Places:</strong> {{ booking.quantity }}</p>
+            <p><strong>Total paid:</strong> £{{ booking.total_price|floatformat:2 }}</p>
         </div>
-    {% endif %}
 
-    <p>
-        Are you sure you want to cancel your booking for:
-    </p>
-
-    <h2>
-        {{ booking.event.name }}
-    </h2>
-
-    <div class="cancel-booking-details">
-
-        <p>
-            <strong>Date:</strong>
-            {{ booking.event.date }}
+        <p class="cancel-booking-note">
+            Cancelling this booking will refund
+            <strong>£{{ booking.total_price|floatformat:2 }}</strong>
+            to your original payment method.
         </p>
 
-        <p>
-            <strong>Time:</strong>
-            {{ booking.event.time }}
-        </p>
+        {% if error_message %}
+            <div class="alert alert-danger">
+                {{ error_message }}
+            </div>
+        {% endif %}
 
-        <p>
-            <strong>Places:</strong>
-            {{ booking.quantity }}
-        </p>
+        <div class="cancel-booking-actions">
+            <form method="POST" action="{% url 'cancel_booking' booking.id %}">
+                {% csrf_token %}
+                <button type="submit" class="cancel-button">
+                    Yes, Cancel & Refund
+                </button>
+            </form>
 
-        <p>
-            <strong>Total paid:</strong>
-            £{{ booking.total_price|floatformat:2 }}
-        </p>
+            <a href="{% url 'profile' %}" class="event-view-button">
+                Keep Booking
+            </a>
+        </div>
 
     </div>
-
-    <p>
-        Cancelling this booking will refund
-        <strong>£{{ booking.total_price|floatformat:2 }}</strong>
-        to your original payment method.
-    </p>
-
-    <div class="cancel-booking-actions">
-
-        <form
-            method="POST"
-            action="{% url 'cancel_booking' booking.id %}"
-        >
-            {% csrf_token %}
-
-            <button
-                type="submit"
-                class="cancel-button"
-            >
-                Yes, Cancel & Refund
-            </button>
-        </form>
-
-        <a
-            href="{% url 'profile' %}"
-            class="event-view-button"
-        >
-            Keep Booking
-        </a>
-
-    </div>
-
 </section>
 
 {% endblock %}

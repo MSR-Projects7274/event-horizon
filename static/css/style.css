@@ -1311,12 +1311,55 @@ footer {
     opacity: 0.85;
 }
 
+/* Cancel Booking Page */
+
+.cancel-booking-page {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+}
+
+.cancel-booking-card {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: var(--eh-surface);
+    border: 1px solid var(--eh-border);
+    border-radius: var(--eh-radius);
+    box-shadow: var(--eh-shadow);
+}
+
+.cancel-booking-card h1 {
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+}
+
+.cancel-booking-card h2 {
+    margin-bottom: 1.5rem;
+}
+
+.cancel-booking-details p {
+    margin-bottom: 0.9rem;
+}
+
+.cancel-booking-note {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
 .cancel-booking-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
     align-items: center;
+    gap: 1rem;
     margin-top: 1.5rem;
+}
+
+.cancel-booking-actions form {
+    margin: 0;
 }
 
 /* Cancelled Booking */
@@ -2018,7 +2061,6 @@ main {
     width: 100%;
 }
 
-
 /* Profile */
 
 .profile-page {
@@ -2057,6 +2099,12 @@ main {
 .cancel-booking-actions {
     flex-direction: column;
     align-items: stretch;
+}
+
+.cancel-booking-actions form,
+.cancel-booking-actions .cancel-button,
+.cancel-booking-actions .event-view-button {
+    width: 100%;
 }
 
 
