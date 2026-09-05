@@ -2027,6 +2027,14 @@ main {
     padding: 1rem 0;
 }
 
+.profile-header {
+    text-align: center;
+}
+
+.profile-bookings h2 {
+    text-align: center;
+}
+
 .account-details {
     padding: 1.25rem;
 }
