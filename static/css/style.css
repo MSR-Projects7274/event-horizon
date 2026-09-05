@@ -582,7 +582,7 @@ footer {
 .home-featured-section {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 5rem 2rem;
+    padding: 2.5rem 2rem 5rem;
 }
 
 .home-event-grid {
@@ -1790,9 +1790,9 @@ main {
 }
 
 .home-section-heading h2 {
-    font-size: clamp(1.8rem, 8vw, 2.8rem);
+    margin: 0;
+    font-size: clamp(1.8rem, 4vw, 3rem);
 }
-
 
 /* Homepage Ticker */
 
