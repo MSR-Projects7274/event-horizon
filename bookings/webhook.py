@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from smtplib import SMTPException
 
 import stripe
@@ -126,9 +127,12 @@ def stripe_webhook(request):
 
     session_id = session.id
     payment_intent = session.payment_intent
+    amount_total = session.amount_total
 
-    if not session_id:
+    if not session_id or amount_total is None:
         return HttpResponse(status=400)
+
+    total_paid = Decimal(amount_total) / Decimal('100')
 
     # Make sure the booking user still exists
 
@@ -200,6 +204,7 @@ def stripe_webhook(request):
                     user_id=user_id,
                     event=event,
                     quantity=quantity,
+                    total_paid=total_paid,
                     stripe_session_id=session_id,
                     status='cancelled',
                 )
@@ -209,6 +214,7 @@ def stripe_webhook(request):
                     user_id=user_id,
                     event=event,
                     quantity=quantity,
+                    total_paid=total_paid,
                     stripe_session_id=session_id,
                 )
 
@@ -265,11 +271,13 @@ def stripe_webhook(request):
     # Send booking confirmation email
 
     if customer_email:
-        total_price = event.price * quantity
+        total_price = total_paid
+        price_per_place = total_paid / quantity
 
         email_context = {
             'event': event,
             'quantity': quantity,
+            'price_per_place': price_per_place,
             'total_price': total_price,
             'bookings_url': request.build_absolute_uri(
                 reverse('profile')
@@ -287,7 +295,7 @@ def stripe_webhook(request):
             f'Time: {event.time:%H:%M}\n'
             f'Location: {event.location}\n'
             f'Places: {quantity}\n'
-            f'Price per place: £{event.price:.2f}\n'
+            f'Price per place: £{price_per_place:.2f}\n'
             f'Total paid: £{total_price:.2f}\n\n'
             'Thank you for booking with Event Horizon.\n\n'
             'Discover experiences beyond the ordinary.'

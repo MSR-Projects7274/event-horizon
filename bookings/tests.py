@@ -305,17 +305,23 @@ class WebhookTests(TestCase):
         event_id=None,
         user_id=None,
         email=None,
+        amount_total=3000,
     ):
         return SimpleNamespace(
             id=session_id,
             payment_status=payment_status,
             payment_intent=payment_intent,
+            amount_total=amount_total,
             customer_details=StripeDict(
                 email=email if email is not None else self.user.email
             ),
             metadata=StripeDict(
-                event_id=str(event_id if event_id is not None else self.event.id),
-                user_id=str(user_id if user_id is not None else self.user.id),
+                event_id=str(
+                    event_id if event_id is not None else self.event.id
+                ),
+                user_id=str(
+                    user_id if user_id is not None else self.user.id
+                ),
                 quantity=quantity,
             ),
         )
@@ -611,6 +617,54 @@ class WebhookTests(TestCase):
         self.assertEqual(booking.event, self.event)
         self.assertEqual(booking.quantity, 2)
         self.assertEqual(booking.status, 'confirmed')
+        mock_send_mail.assert_called_once()
+
+    @patch('bookings.webhook.send_mail')
+    @patch('bookings.webhook.stripe.Webhook.construct_event')
+    def test_booking_preserves_amount_paid_when_event_price_changes(
+        self,
+        mock_construct_event,
+        mock_send_mail,
+    ):
+        session = self.stripe_session(
+            quantity='2',
+            amount_total=3000,
+        )
+        mock_construct_event.return_value = self.stripe_event(session)
+
+        response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        booking = Booking.objects.get(
+            stripe_session_id='cs_webhook'
+        )
+
+        self.assertEqual(
+            booking.total_paid,
+            Decimal('30.00'),
+        )
+
+        self.event.price = Decimal('50.00')
+        self.event.save(update_fields=['price'])
+
+        booking.refresh_from_db()
+
+        self.assertEqual(
+            booking.total_price,
+            Decimal('30.00'),
+        )
+
+        self.assertEqual(
+            booking.price_per_place,
+            Decimal('15.00'),
+        )
+
         mock_send_mail.assert_called_once()
 
     @patch('bookings.webhook.send_mail')

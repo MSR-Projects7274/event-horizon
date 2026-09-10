@@ -98,6 +98,13 @@ class Booking(models.Model):
         validators=[MinValueValidator(1)],
     )
 
+    total_paid = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
     stripe_session_id = models.CharField(
         max_length=255,
         unique=True,
@@ -134,9 +141,21 @@ class Booking(models.Model):
 
     @property
     def total_price(self):
-        """Return the total price for this booking."""
+        """Return the amount originally paid for this booking."""
+
+        if self.total_paid is not None:
+            return self.total_paid
 
         return self.event.price * self.quantity
+
+    @property
+    def price_per_place(self):
+        """Return the original price paid per place."""
+
+        if self.total_paid is not None and self.quantity:
+            return self.total_paid / self.quantity
+
+        return self.event.price
 
     def __str__(self):
         return f"{self.user.username} - {self.event.name}"
