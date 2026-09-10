@@ -43,6 +43,18 @@ class CheckoutViewTests(TestCase):
             active=True,
         )
 
+        self.past_event = Event.objects.create(
+            category=self.category,
+            name='Past Acoustic Night',
+            description='An event that has already happened.',
+            location='The Venue',
+            date=timezone.localdate() - timedelta(days=1),
+            time=time(20, 0),
+            price=Decimal('12.50'),
+            capacity=5,
+            active=True,
+        )
+
     def test_checkout_requires_login(self):
         url = reverse('create_checkout_session', args=[self.event.id])
         response = self.client.post(url, {'quantity': 1})
@@ -97,6 +109,32 @@ class CheckoutViewTests(TestCase):
         self.assertRedirects(
             response,
             reverse('event_detail', args=[self.event.id]),
+        )
+        mock_create.assert_not_called()
+
+    @patch('bookings.views.stripe.checkout.Session.create')
+    def test_checkout_rejects_past_event(self, mock_create):
+        mock_create.return_value = SimpleNamespace(
+            url='https://checkout.stripe.test/session'
+        )
+
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse(
+                'create_checkout_session',
+                args=[self.past_event.id],
+            ),
+            {'quantity': 1},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                'event_detail',
+                args=[self.past_event.id],
+            ),
+            fetch_redirect_response=False,
         )
         mock_create.assert_not_called()
 
@@ -473,6 +511,46 @@ class WebhookTests(TestCase):
             idempotency_key=(
                 'unavailable-event-refund-cs_unavailable_event'
             ),
+        )
+
+    @patch('bookings.webhook.stripe.Refund.create')
+    @patch('bookings.webhook.stripe.Webhook.construct_event')
+    def test_webhook_refunds_payment_when_event_has_started(
+        self,
+        mock_construct_event,
+        mock_refund,
+    ):
+        self.event.date = timezone.localdate() - timedelta(days=1)
+        self.event.save(update_fields=['date'])
+
+        session = self.stripe_session(
+            session_id='cs_started_event',
+        )
+
+        mock_construct_event.return_value = self.stripe_event(session)
+
+        mock_refund.return_value = SimpleNamespace(
+            id='re_started_event'
+        )
+
+        response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertFalse(
+            Booking.objects.filter(
+                stripe_session_id='cs_started_event'
+            ).exists()
+        )
+
+        mock_refund.assert_called_once_with(
+            payment_intent='pi_webhook',
+            idempotency_key='started-event-refund-cs_started_event',
         )
 
     @patch('bookings.webhook.stripe.Refund.create')

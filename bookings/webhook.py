@@ -181,7 +181,9 @@ def stripe_webhook(request):
         return HttpResponse(status=200)
 
     # Lock the event, recheck for concurrent webhook delivery,
-    # then check capacity and create the booking.
+    # then check event timing and capacity before creating the booking.
+
+    event_started = False
 
     try:
 
@@ -197,6 +199,10 @@ def stripe_webhook(request):
             ).first()
 
             if concurrent_booking:
+                booking = None
+
+            elif event.has_started:
+                event_started = True
                 booking = None
 
             elif quantity > event.places_remaining:
@@ -253,6 +259,21 @@ def stripe_webhook(request):
             return HttpResponse(status=500)
 
         return HttpResponse(status=200)
+
+    # Refund if the event started before payment completed
+
+    if event_started:
+        if not payment_intent:
+            return HttpResponse(status=500)
+
+        if refund_unfulfillable_payment(
+            session_id,
+            payment_intent,
+            'started-event-refund',
+        ):
+            return HttpResponse(status=200)
+
+        return HttpResponse(status=500)
 
     # Refund if capacity disappeared after payment
 

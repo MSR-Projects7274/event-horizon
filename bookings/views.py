@@ -21,6 +21,12 @@ def create_checkout_session(request, event_id):
         active=True,
     )
 
+    if event.has_started:
+        return redirect(
+            'event_detail',
+            event_id=event.id,
+        )
+
     if request.method != 'POST':
         return redirect(
             'event_detail',

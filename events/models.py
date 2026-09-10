@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 
 class Category(models.Model):
@@ -50,6 +53,25 @@ class Event(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def has_started(self):
+        """Return whether the event's scheduled start time has passed."""
+
+        event_start = datetime.combine(
+            self.date,
+            self.time,
+        )
+
+        now = timezone.now()
+
+        if timezone.is_aware(now):
+            event_start = timezone.make_aware(
+                event_start,
+                timezone.get_current_timezone(),
+            )
+
+        return now >= event_start
 
     @property
     def places_booked(self):

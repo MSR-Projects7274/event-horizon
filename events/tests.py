@@ -1,4 +1,4 @@
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 from smtplib import SMTPDataError
 from types import SimpleNamespace
@@ -38,6 +38,27 @@ class EventModelTests(TestCase):
 
     def test_event_string_representation(self):
         self.assertEqual(str(self.event), 'Kayaking Experience')
+
+    @patch('events.models.timezone.now')
+    def test_event_has_started_uses_scheduled_time(
+        self,
+        mock_now,
+    ):
+        event_start = timezone.make_aware(
+            datetime.combine(
+                self.event.date,
+                self.event.time,
+            ),
+            timezone.get_current_timezone(),
+        )
+
+        mock_now.return_value = event_start - timedelta(minutes=1)
+
+        self.assertFalse(self.event.has_started)
+
+        mock_now.return_value = event_start
+
+        self.assertTrue(self.event.has_started)
 
     def test_places_booked_counts_only_confirmed_bookings(self):
         Booking.objects.create(
@@ -129,6 +150,18 @@ class EventViewTests(TestCase):
             active=False,
         )
 
+        self.past_event = Event.objects.create(
+            category=self.adventure,
+            name='Past Event',
+            description='This event has already happened.',
+            location='York',
+            date=timezone.localdate() - timedelta(days=1),
+            time=time(18, 0),
+            price=Decimal('15.00'),
+            capacity=5,
+            active=True,
+        )
+
     def test_event_list_shows_only_active_events(self):
         response = self.client.get(reverse('event_list'))
         events = list(response.context['events'])
@@ -136,6 +169,13 @@ class EventViewTests(TestCase):
         self.assertIn(self.event, events)
         self.assertIn(self.workshop, events)
         self.assertNotIn(self.inactive_event, events)
+
+    def test_event_list_excludes_past_events(self):
+        response = self.client.get(reverse('event_list'))
+
+        events = list(response.context['events'])
+
+        self.assertNotIn(self.past_event, events)
 
     def test_event_list_searches_name_description_location_and_category(self):
         for query in ('History', 'streets', 'York', 'Adventure'):
@@ -159,6 +199,25 @@ class EventViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_past_event_detail_shows_ended_state_without_booking_link(self):
+        response = self.client.get(
+            reverse('event_detail', args=[self.past_event.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'This event has already taken place.',
+        )
+        self.assertContains(
+            response,
+            'Event Ended',
+        )
+        self.assertNotContains(
+            response,
+            reverse('book_event', args=[self.past_event.id]),
+        )
+
     def test_book_event_requires_login(self):
         url = reverse('book_event', args=[self.event.id])
         response = self.client.get(url)
@@ -174,6 +233,18 @@ class EventViewTests(TestCase):
         self.assertTemplateUsed(response, 'events/book_event.html')
         self.assertEqual(response.context['event'], self.event)
         self.assertIn('form', response.context)
+
+    def test_book_event_redirects_when_event_has_started(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse('book_event', args=[self.past_event.id])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('event_detail', args=[self.past_event.id]),
+        )
 
     def test_book_event_redirects_when_sold_out(self):
         Booking.objects.create(

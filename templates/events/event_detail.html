@@ -64,7 +64,17 @@
 
         </div>
 
-        {% if event.places_remaining > 0 %}
+        {% if event.has_started %}
+
+            <p>
+                This event has already taken place.
+            </p>
+
+            <span class="event-book-button sold-out-button">
+                Event Ended
+            </span>
+
+        {% elif event.places_remaining > 0 %}
 
             {% if event.is_special %}
 

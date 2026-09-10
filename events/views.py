@@ -21,13 +21,23 @@ logger = logging.getLogger(__name__)
 
 
 def event_list(request):
-    """Display active events with search and category filtering."""
+    """Display active upcoming events with search and category filtering."""
 
     search_query = request.GET.get('q', '').strip()
     category_id = request.GET.get('category')
 
+    now = timezone.localtime()
+    current_date = now.date()
+    current_time = now.time().replace(tzinfo=None)
+
     events = Event.objects.filter(
         active=True
+    ).filter(
+        models.Q(date__gt=current_date) |
+        models.Q(
+            date=current_date,
+            time__gt=current_time,
+        )
     ).select_related('category')
 
     categories = Category.objects.all()
@@ -81,6 +91,12 @@ def book_event(request, event_id):
         id=event_id,
         active=True,
     )
+
+    if event.has_started:
+        return redirect(
+            'event_detail',
+            event_id=event.id,
+        )
 
     if event.places_remaining <= 0:
         return redirect(
