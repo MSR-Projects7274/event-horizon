@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -57,6 +58,21 @@ class Event(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        """Prevent capacity dropping below confirmed booked places."""
+
+        super().clean()
+
+        if self.pk and self.capacity < self.places_booked:
+            raise ValidationError(
+                {
+                    'capacity': (
+                        'Capacity cannot be lower than the number '
+                        'of confirmed booked places.'
+                    ),
+                }
+            )
 
     @property
     def has_started(self):

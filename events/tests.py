@@ -122,6 +122,25 @@ class EventModelTests(TestCase):
                 capacity=5,
             )
 
+    def test_event_capacity_cannot_be_reduced_below_confirmed_bookings(self):
+        Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=3,
+            stripe_session_id='cs_capacity_protection',
+            status='confirmed',
+        )
+
+        self.event.capacity = 2
+
+        with self.assertRaises(ValidationError) as error:
+            self.event.full_clean()
+
+        self.assertIn(
+            'capacity',
+            error.exception.message_dict,
+        )
+
     def test_event_with_booking_cannot_be_deleted(self):
         booking = Booking.objects.create(
             user=self.user,
