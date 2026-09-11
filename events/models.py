@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
@@ -36,7 +37,10 @@ class Event(models.Model):
 
     price = models.DecimalField(
         max_digits=8,
-        decimal_places=2
+        decimal_places=2,
+        validators=[
+            MinValueValidator(Decimal('0.01')),
+        ],
     )
 
     capacity = models.PositiveIntegerField()
@@ -90,6 +94,12 @@ class Event(models.Model):
 
     class Meta:
         ordering = ['date', 'time']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(price__gt=0),
+                name='event_price_gt_0',
+            ),
+        ]
 
     def __str__(self):
         return self.name

@@ -6,6 +6,7 @@ from unittest.mock import call, patch
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models.deletion import ProtectedError
 from django.test import RequestFactory, TestCase
@@ -100,6 +101,25 @@ class EventModelTests(TestCase):
                 event=self.event,
                 quantity=0,
                 stripe_session_id='cs_zero_quantity',
+            )
+
+    def test_event_price_must_be_positive_during_validation(self):
+        self.event.price = Decimal('0.00')
+
+        with self.assertRaises(ValidationError):
+            self.event.full_clean()
+
+    def test_event_price_cannot_be_zero_in_database(self):
+        with self.assertRaises(IntegrityError):
+            Event.objects.create(
+                category=self.category,
+                name='Free Invalid Event',
+                description='Invalid zero-price event.',
+                location='Test Venue',
+                date=timezone.localdate() + timedelta(days=8),
+                time=time(12, 0),
+                price=Decimal('0.00'),
+                capacity=5,
             )
 
     def test_event_with_booking_cannot_be_deleted(self):
