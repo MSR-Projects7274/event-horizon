@@ -20,7 +20,7 @@ class Category(models.Model):
 class Event(models.Model):
     category = models.ForeignKey(
         Category,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='events'
     )
 
@@ -111,7 +111,7 @@ class Booking(models.Model):
 
     event = models.ForeignKey(
         Event,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='bookings'
     )
 

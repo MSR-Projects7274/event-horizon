@@ -7,6 +7,7 @@ from unittest.mock import call, patch
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
 from django.db import IntegrityError
+from django.db.models.deletion import ProtectedError
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -100,6 +101,35 @@ class EventModelTests(TestCase):
                 quantity=0,
                 stripe_session_id='cs_zero_quantity',
             )
+
+    def test_event_with_booking_cannot_be_deleted(self):
+        booking = Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=1,
+            stripe_session_id='cs_protected_event',
+        )
+
+        with self.assertRaises(ProtectedError):
+            self.event.delete()
+
+        self.assertTrue(
+            Event.objects.filter(pk=self.event.pk).exists()
+        )
+        self.assertTrue(
+            Booking.objects.filter(pk=booking.pk).exists()
+        )
+
+    def test_category_with_event_cannot_be_deleted(self):
+        with self.assertRaises(ProtectedError):
+            self.category.delete()
+
+        self.assertTrue(
+            Category.objects.filter(pk=self.category.pk).exists()
+        )
+        self.assertTrue(
+            Event.objects.filter(pk=self.event.pk).exists()
+        )
 
 
 class BookingAdminTests(TestCase):
