@@ -26,6 +26,12 @@ def event_list(request):
     search_query = request.GET.get('q', '').strip()
     category_id = request.GET.get('category')
 
+    if category_id:
+        try:
+            category_id = int(category_id)
+        except (TypeError, ValueError):
+            category_id = None
+
     now = timezone.localtime()
     current_date = now.date()
     current_time = now.time().replace(tzinfo=None)

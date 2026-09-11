@@ -97,7 +97,7 @@ class EventModelTests(TestCase):
                 event=self.event,
                 quantity=0,
                 stripe_session_id='cs_zero_quantity',
-        )
+            )
 
 
 class EventViewTests(TestCase):
@@ -191,6 +191,22 @@ class EventViewTests(TestCase):
         events = list(response.context['events'])
 
         self.assertEqual(events, [self.workshop])
+
+    def test_event_list_ignores_invalid_category_filter(self):
+        response = self.client.get(
+            reverse('event_list'),
+            {'category': 'potato'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        events = list(response.context['events'])
+
+        self.assertIn(self.event, events)
+        self.assertIn(self.workshop, events)
+        self.assertIsNone(
+            response.context['selected_category'],
+        )
 
     def test_inactive_event_detail_returns_404(self):
         response = self.client.get(
