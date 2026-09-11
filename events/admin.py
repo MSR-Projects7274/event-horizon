@@ -51,3 +51,15 @@ class BookingAdmin(admin.ModelAdmin):
         'event',
         'created_at',
     )
+
+    def has_add_permission(self, request):
+        """Prevent bookings being created manually in Django Admin."""
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        """Keep Stripe-managed booking records read-only in Django Admin."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent paid booking records being deleted from Django Admin."""
+        return False

@@ -4,12 +4,14 @@ from smtplib import SMTPDataError
 from types import SimpleNamespace
 from unittest.mock import call, patch
 
+from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
 from django.db import IntegrityError
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from .admin import BookingAdmin
 from .models import Booking, Category, Event
 
 
@@ -98,6 +100,45 @@ class EventModelTests(TestCase):
                 quantity=0,
                 stripe_session_id='cs_zero_quantity',
             )
+
+
+class BookingAdminTests(TestCase):
+    """Tests for protecting Stripe-managed bookings in Django Admin."""
+
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='StrongPass123!',
+        )
+        self.request = RequestFactory().get('/admin/events/booking/')
+        self.request.user = self.superuser
+        self.booking_admin = BookingAdmin(
+            Booking,
+            AdminSite(),
+        )
+
+    def test_booking_admin_is_view_only(self):
+        self.assertTrue(
+            self.booking_admin.has_view_permission(
+                self.request,
+            )
+        )
+        self.assertFalse(
+            self.booking_admin.has_add_permission(
+                self.request,
+            )
+        )
+        self.assertFalse(
+            self.booking_admin.has_change_permission(
+                self.request,
+            )
+        )
+        self.assertFalse(
+            self.booking_admin.has_delete_permission(
+                self.request,
+            )
+        )
 
 
 class EventViewTests(TestCase):
