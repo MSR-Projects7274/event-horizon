@@ -424,11 +424,11 @@ A relational structure was chosen because the core data is naturally connected.
 
 Categories contain multiple events, events can have multiple bookings, and each booking belongs to both an event and an authenticated user.
 
-The `Booking` model acts as the link between a user and an event while also storing transaction-related information such as quantity, booking status, Stripe session information and refund information.
+The `Booking` model acts as the link between a user and an event while also storing transaction-related information such as quantity, booking status, Stripe session information, the amount originally paid and refund information.
 
 Availability is calculated from the event's capacity and its confirmed bookings rather than being stored as a second independent value. This reduces the risk of two different availability values becoming inconsistent.
 
-Business rules are also enforced at more than one layer where appropriate. For example, invalid booking quantities are rejected during the booking flow, while the data model also requires a booking quantity of at least one.
+Business rules are also enforced at more than one layer where appropriate. Invalid booking quantities and event prices are protected by model/database constraints, while event capacity cannot be reduced below the number of confirmed booked places.
 
 ## Authentication and Paid Access
 
@@ -446,7 +446,7 @@ Reaching the Stripe checkout page is not treated as proof of payment. The applic
 
 This separation was intentional because a user can leave or cancel Checkout before completing payment. Creating the booking only after successful payment confirmation prevents incomplete checkouts from occupying event capacity.
 
-Additional payment safeguards were added during development to account for real-world failure conditions. These include duplicate webhook protection, retry-safe refunds, capacity checks after payment, graceful handling of external email or Stripe failures and automatic refunds when a paid booking can no longer be fulfilled.
+Additional payment safeguards were added during development to account for real-world failure conditions. These include duplicate webhook protection, asynchronous payment-success handling, retry-safe refunds, capacity and event-start checks after payment, preservation of the amount originally paid, graceful handling of external email or Stripe failures, automatic refunds when a paid booking can no longer be fulfilled and tracking when Stripe later reports a refund failure.
 
 ## Capacity and Booking Status
 
@@ -567,10 +567,11 @@ The booking flow crosses both the frontend and several backend components.
 4. The backend creates a Stripe Checkout Session.
 5. The browser is redirected to Stripe's hosted Checkout interface.
 6. Stripe processes the payment outside the Event Horizon application.
-7. After payment, Stripe sends a webhook to the Event Horizon backend.
-8. The webhook validates the event and payment state before creating the booking.
-9. The browser returns to the booking-success flow.
-10. The success template displays the confirmed booking, a processing state if webhook completion is delayed, or the appropriate cancelled/refunded state if the booking could not be fulfilled.
+7. After payment, Stripe sends the relevant webhook to the Event Horizon backend. Immediate payments use `checkout.session.completed`, while delayed payment methods can later complete through `checkout.session.async_payment_succeeded`.
+8. The webhook validates the paid state, event availability, event start time and remaining capacity before creating the booking.
+9. The amount charged by Stripe is stored on the booking so later event-price changes do not alter historical payment information.
+10. The browser returns to the booking-success flow.
+11. The success template displays the confirmed booking, a processing state if webhook completion is delayed, or the appropriate refund-processing state if the booking could not be fulfilled.
 
 The Stripe webhook, rather than the browser redirect, is therefore the authoritative backend confirmation that payment succeeded.
 
@@ -580,11 +581,13 @@ Cancellation also begins in the frontend but is controlled by backend logic.
 
 The user opens the cancellation page for one of their own bookings and submits the cancellation request.
 
-Django verifies booking ownership before retrieving the associated Stripe payment information and requesting the refund.
+Django verifies booking ownership and confirms that the event has not already started before retrieving the associated Stripe payment information and requesting the refund. Cancellation refunds use a deterministic idempotency key so a retry cannot accidentally create a second refund for the same booking.
 
-After a successful refund, the backend updates the booking status and refund information. Because availability is calculated using confirmed bookings only, the cancelled places automatically become available again.
+After Stripe accepts the refund request, the backend records the refund identifier and marks the booking as cancelled. Because availability is calculated using confirmed bookings only, the cancelled places automatically become available again.
 
-The user is then redirected to their profile, where the updated database state is reflected in the interface.
+Stripe can report a refund failure later through `refund.failed`. Event Horizon records that failure against the booking so the profile can display `Refund Failed` rather than continuing to imply that the refund is progressing normally.
+
+The user is then redirected to their profile, where the latest database state is reflected in the interface.
 
 ## Profiles
 
@@ -706,9 +709,11 @@ erDiagram
         bigint user_id FK
         bigint event_id FK
         integer quantity
+        decimal total_paid
         string stripe_session_id
         string status
         string stripe_refund_id
+        string refund_status
         datetime cancelled_at
         datetime created_at
     }
@@ -748,7 +753,7 @@ A category can contain **many events**, while each event belongs to **one catego
 
 `Category to Event` is therefore a **one-to-many relationship**.
 
-The relationship uses `on_delete=models.CASCADE`, meaning deleting a category also deletes the events assigned to it.
+The relationship uses `on_delete=models.PROTECT`, preventing a category from being deleted while events still reference it. This protects the centrally owned event dataset from accidental cascading deletion.
 
 ## Event
 
@@ -779,7 +784,11 @@ Events are ordered by date and then time.
 
 `places_remaining` subtracts the confirmed booked places from the event capacity.
 
-These calculated properties allow event availability and sold-out behaviour to remain synchronized with booking records.
+`has_started` combines the stored event date and time using Django's configured `Europe/London` timezone, allowing event-start checks to follow GMT/BST correctly.
+
+Event prices must be greater than zero, enforced through validation and a database `CheckConstraint`. Event capacity is also validated so it cannot be reduced below the number of already confirmed booked places.
+
+These calculated properties and validation rules allow event availability, timing and sold-out behaviour to remain synchronized with booking records.
 
 ### Relationships
 
@@ -787,7 +796,7 @@ Each event belongs to **one category**, while a category can contain many events
 
 An event can also have **many bookings**, while each booking relates to one event.
 
-Deleting an event currently cascades to its associated bookings.
+The category relationship and booking relationship both use `PROTECT` where historical data would otherwise be lost. A category cannot be deleted while events still reference it, and an event cannot be deleted while bookings still reference it.
 
 ## Booking
 
@@ -799,23 +808,31 @@ The `Booking` model connects a registered user to an event they have purchased p
 | `user`              | `ForeignKey(User)`     | User who owns the booking.                                                                         |
 | `event`             | `ForeignKey(Event)`    | Event being booked.                                                                                |
 | `quantity`          | `PositiveIntegerField` | Number of places included in the booking.                                                          |
+| `total_paid`        | `DecimalField(12, 2)`  | Optional preserved amount originally charged by Stripe for the complete booking.                    |
 | `stripe_session_id` | `CharField(255)`       | Unique Stripe Checkout Session identifier used to associate payment confirmation with the booking. |
 | `status`            | `CharField(20)`        | Booking state. Either `confirmed` or `cancelled`.                                                  |
-| `stripe_refund_id`  | `CharField(255)`       | Optional Stripe refund identifier recorded after cancellation.                                     |
+| `stripe_refund_id`  | `CharField(255)`       | Optional Stripe refund identifier recorded after a refund request is accepted.                      |
+| `refund_status`     | `CharField(20)`        | Optional Stripe refund lifecycle state, including failed-refund tracking.                           |
 | `cancelled_at`      | `DateTimeField`        | Optional timestamp recording when the booking was cancelled.                                       |
 | `created_at`        | `DateTimeField`        | Timestamp recorded when the booking is created.                                                    |
 
 ### Model Behaviour
 
-`total_price` calculates the booking value using:
+`total_price` returns the amount originally paid when `total_paid` is available. This prevents an administrator changing the current event price from rewriting the historical value of an existing booking. Older records without `total_paid` fall back to:
 
 ```text
 event price x booking quantity
 ```
 
+`price_per_place` similarly derives the original per-place amount from `total_paid` when available.
+
 Only bookings with a `confirmed` status contribute to an event's booked capacity. Cancelled bookings therefore release their places back into the event's available capacity.
 
+`quantity` must be at least one and is protected by both validation and a database `CheckConstraint`.
+
 `stripe_session_id` is unique, helping prevent the same Stripe Checkout Session from being represented by multiple booking records.
+
+`refund_status` records relevant Stripe refund lifecycle information so a later `refund.failed` webhook can be reflected accurately in the user's profile.
 
 ### Relationships
 
@@ -823,10 +840,9 @@ A user can have **many bookings**, while each booking belongs to **one user**.
 
 An event can have **many bookings**, while each booking belongs to **one event**.
 
-Both relationships currently use cascading deletion:
+The user relationship uses cascading deletion, so deleting a user also deletes that user's associated bookings.
 
-* deleting a user deletes that user's associated bookings;
-* deleting an event deletes bookings associated with that event.
+The event relationship uses `on_delete=models.PROTECT`, preventing an event with booking history from being deleted and preserving the integrity of existing transaction records.
 
 ## Relationship Summary
 
@@ -920,13 +936,18 @@ The project uses environment variables for sensitive configuration, including:
 
 - Django secret key
 - Database URL
+- allowed hosts and trusted CSRF origins
+- production debug/security configuration
 - Stripe public key
 - Stripe secret key
 - Stripe webhook secret
+- Resend API key
 - AWS access credentials
 - AWS storage bucket configuration
 
 These values are deliberately excluded from version control.
+
+The project timezone is configured as `Europe/London`, allowing event start-time rules to follow GMT and British Summer Time automatically.
 
 ## Static Files
 
@@ -1127,7 +1148,7 @@ Wireframes and final screenshots provide the visual evidence for this progressio
 
 Event Horizon uses a combination of automated Django tests and manual browser-based testing.
 
-The automated test suite currently contains **54 passing tests** covering authentication, event discovery, booking behaviour, Stripe Checkout, webhook handling, refunds, capacity management and user permissions.
+The automated test suite currently contains **76 passing tests** covering authentication, event discovery, booking behaviour, data-integrity constraints, event timing, Stripe Checkout, immediate and asynchronous webhook handling, refunds, failed-refund tracking, capacity management and user permissions.
 
 Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts and accessibility. **64 completed manual checks currently pass**, with event-image verification pending until final imagery is uploaded. Production-specific testing will be completed against the final Heroku deployment.
 
@@ -1154,7 +1175,7 @@ The booking process needed to ensure that a booking was not created simply becau
 
 The final implementation uses Stripe Checkout followed by webhook confirmation. This means that the booking is created only after Stripe confirms the successful payment.
 
-This required careful handling of Stripe's payment information and webhook events.
+This required careful handling of Stripe's payment information and webhook events, including delayed successful payments, duplicate delivery, capacity changes during Checkout, automatic refunds, idempotent refund retries and later `refund.failed` events.
 
 ## Booking and Capacity Management
 
@@ -1207,7 +1228,7 @@ The project also demonstrated the importance of separating payment confirmation 
 
 External storage also provided useful experience in understanding how production applications handle uploaded media differently from local development environments.
 
-Finally, the project highlighted the importance of testing deployment configuration rather than assuming that code which works locally will automatically work in production.
+Finally, the project highlighted the importance of testing deployment configuration rather than assuming that code which works locally will automatically work in production. It also reinforced the importance of timezone-aware business rules: event start checks use `Europe/London` so GMT/BST changes do not shift booking or cancellation cut-offs.
 
 </details>
 
