@@ -64,6 +64,21 @@ class EventModelTests(TestCase):
 
         self.assertTrue(self.event.has_started)
 
+    @patch('events.models.timezone.now')
+    def test_event_has_started_uses_british_summer_time(
+        self,
+        mock_now,
+    ):
+        self.event.date = datetime(2026, 7, 1).date()
+        self.event.time = time(18, 0)
+
+        mock_now.return_value = timezone.make_aware(
+            datetime(2026, 7, 1, 17, 30),
+            timezone=timezone.get_fixed_timezone(0),
+        )
+
+        self.assertTrue(self.event.has_started)
+
     def test_places_booked_counts_only_confirmed_bookings(self):
         Booking.objects.create(
             user=self.user,
