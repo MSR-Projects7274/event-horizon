@@ -1172,9 +1172,10 @@ footer {
     display: grid;
     grid-template-columns: repeat(
         auto-fit,
-        minmax(280px, 1fr)
+        minmax(280px, 360px)
     );
     gap: 1.5rem;
+    justify-content: start;
 }
 
 .booking-card {
