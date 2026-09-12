@@ -121,7 +121,7 @@
                                     £{{ booking.total_price|floatformat:2 }}
                                 </p>
 
-                                {% if booking.status == 'cancelled' %}
+                                {% if booking.cancelled_at %}
 
                                     <p>
                                         <strong>Cancelled:</strong>
@@ -152,9 +152,19 @@
 
                                 {% else %}
 
-                                    <span class="booking-refunded">
-                                        Refunded
-                                    </span>
+                                    {% if booking.stripe_refund_id %}
+
+                                        <span class="booking-refunded">
+                                            Refund Requested
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="booking-refunded">
+                                            Refund Processing
+                                        </span>
+
+                                    {% endif %}
 
                                 {% endif %}
 

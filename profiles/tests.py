@@ -160,3 +160,38 @@ class ProfileViewTests(TestCase):
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('EvenStrongerPass456!'))
+
+    def test_profile_shows_refund_processing_when_refund_id_is_missing(self):
+        Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=1,
+            stripe_session_id='cs_refund_processing',
+            status='cancelled',
+        )
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Refund Processing')
+        self.assertNotContains(response, 'Refund Requested')
+
+    def test_profile_shows_refund_requested_when_refund_id_exists(self):
+        Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=1,
+            stripe_session_id='cs_refund_requested',
+            stripe_refund_id='re_test_refund',
+            status='cancelled',
+        )
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Refund Requested')
+        self.assertNotContains(response, 'Refund Processing')
