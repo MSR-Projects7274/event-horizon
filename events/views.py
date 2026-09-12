@@ -137,6 +137,9 @@ def cancel_booking(request, booking_id):
     if booking.status == 'cancelled':
         return redirect('profile')
 
+    if booking.event.has_started:
+        return redirect('profile')
+
     if request.method == 'POST':
 
         try:

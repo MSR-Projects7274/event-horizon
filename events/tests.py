@@ -411,6 +411,44 @@ class EventViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    @patch('events.views.stripe.Refund.create')
+    @patch('events.views.stripe.checkout.Session.retrieve')
+    def test_cancel_booking_rejects_cancellation_after_event_has_started(
+        self,
+        mock_retrieve,
+        mock_refund,
+    ):
+        booking = Booking.objects.create(
+            user=self.user,
+            event=self.past_event,
+            quantity=1,
+            stripe_session_id='cs_past_event_booking',
+        )
+
+        mock_retrieve.return_value = SimpleNamespace(
+            payment_intent='pi_past_event'
+        )
+        mock_refund.return_value = SimpleNamespace(
+            id='re_past_event'
+        )
+
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('cancel_booking', args=[booking.id])
+        )
+
+        self.assertRedirects(response, reverse('profile'))
+
+        booking.refresh_from_db()
+
+        self.assertEqual(booking.status, 'confirmed')
+        self.assertIsNone(booking.stripe_refund_id)
+        self.assertIsNone(booking.cancelled_at)
+
+        mock_retrieve.assert_not_called()
+        mock_refund.assert_not_called()
+
     @patch('events.views.send_mail')
     @patch('events.views.stripe.Refund.create')
     @patch('events.views.stripe.checkout.Session.retrieve')
