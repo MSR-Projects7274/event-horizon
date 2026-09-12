@@ -89,9 +89,28 @@ def stripe_webhook(request):
     except stripe.error.SignatureVerificationError:
         return HttpResponse(status=400)
 
+    event_type = stripe_event['type']
+
+    # Record refunds that later fail after Stripe accepted the request.
+
+    if event_type == 'refund.failed':
+        refund = stripe_event['data']['object']
+        refund_id = getattr(refund, 'id', None)
+
+        if not refund_id:
+            return HttpResponse(status=400)
+
+        Booking.objects.filter(
+            stripe_refund_id=refund_id,
+        ).update(
+            refund_status='failed',
+        )
+
+        return HttpResponse(status=200)
+
     # Process immediate and delayed successful Checkout payments
 
-    if stripe_event['type'] not in (
+    if event_type not in (
         'checkout.session.completed',
         'checkout.session.async_payment_succeeded',
     ):

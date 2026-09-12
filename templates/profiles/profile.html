@@ -152,7 +152,13 @@
 
                                 {% else %}
 
-                                    {% if booking.stripe_refund_id %}
+                                    {% if booking.refund_status == 'failed' %}
+
+                                        <span class="booking-refunded">
+                                            Refund Failed
+                                        </span>
+
+                                    {% elif booking.stripe_refund_id %}
 
                                         <span class="booking-refunded">
                                             Refund Requested

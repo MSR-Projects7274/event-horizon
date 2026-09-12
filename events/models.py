@@ -129,6 +129,14 @@ class Booking(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
+    REFUND_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('requires_action', 'Requires action'),
+        ('succeeded', 'Succeeded'),
+        ('failed', 'Failed'),
+        ('canceled', 'Canceled'),
+    ]
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -170,6 +178,13 @@ class Booking(models.Model):
         max_length=255,
         blank=True,
         null=True
+    )
+
+    refund_status = models.CharField(
+        max_length=20,
+        choices=REFUND_STATUS_CHOICES,
+        blank=True,
+        null=True,
     )
 
     cancelled_at = models.DateTimeField(

@@ -649,6 +649,46 @@ class WebhookTests(TestCase):
         self.assertEqual(mock_refund.call_count, 2)
 
     @patch('bookings.webhook.stripe.Webhook.construct_event')
+    def test_refund_failed_marks_booking_refund_status_failed(
+        self,
+        mock_construct_event,
+    ):
+        booking = Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=1,
+            stripe_session_id='cs_failed_refund',
+            status='cancelled',
+            stripe_refund_id='re_failed_refund',
+        )
+
+        refund = SimpleNamespace(
+            id='re_failed_refund',
+            status='failed',
+        )
+
+        mock_construct_event.return_value = self.stripe_event(
+            refund,
+            event_type='refund.failed',
+        )
+
+        response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        booking.refresh_from_db()
+
+        self.assertEqual(
+            booking.refund_status,
+            'failed',
+        )
+
+    @patch('bookings.webhook.stripe.Webhook.construct_event')
     def test_webhook_rejects_invalid_signature(self, mock_construct_event):
         mock_construct_event.side_effect = stripe.error.SignatureVerificationError(
             'Invalid signature',

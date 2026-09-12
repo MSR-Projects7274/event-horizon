@@ -195,3 +195,23 @@ class ProfileViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Refund Requested')
         self.assertNotContains(response, 'Refund Processing')
+
+    def test_profile_shows_refund_failed_when_refund_status_is_failed(self):
+        Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=1,
+            stripe_session_id='cs_refund_failed',
+            stripe_refund_id='re_refund_failed',
+            refund_status='failed',
+            status='cancelled',
+        )
+
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Refund Failed')
+        self.assertNotContains(response, 'Refund Requested')
+        self.assertNotContains(response, 'Refund Processing')
