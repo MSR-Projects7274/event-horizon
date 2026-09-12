@@ -4,7 +4,7 @@ This document records the testing carried out for Event Horizon.
 
 Testing combines automated Django tests with manual browser-based testing. Automated tests cover repeatable backend behaviour, authentication, booking rules, Stripe boundaries and webhook handling. Manual testing covers complete user journeys, administrator functionality, visual behaviour, validation, responsiveness, accessibility and external-service behaviour that cannot be fully demonstrated through unit tests alone.
 
-Testing results in this document reflect tests that were actually carried out. Items that have not yet been tested, such as final production deployment checks and event-image verification, are clearly marked as pending.
+Testing results in this document reflect tests that were actually carried out. Local testing and the final Heroku production acceptance pass are now complete for the functionality currently available. Final event-image/media verification remains pending because the production event imagery has not yet been uploaded.
 
 ---
 
@@ -20,7 +20,7 @@ Testing results in this document reflect tests that were actually carried out. I
   - [F. Validation, Feedback and Error Handling](#f-validation-feedback-and-error-handling)
   - [G. Responsive Design, Accessibility, Static Files and Media](#g-responsive-design-accessibility-static-files-and-media)
 - [Issues Identified and Regression Tested](#issues-identified-and-regression-tested)
-- [Pending Testing](#pending-testing)
+- [Final Media and Production Testing](#final-media-and-production-testing)
 - [Testing Summary](#testing-summary)
 
 ---
@@ -143,7 +143,7 @@ Manual Stripe testing is also carried out separately using Stripe's test environ
 
 # Manual Testing
 
-Manual testing was carried out using the local development application. Tests were performed through the browser using realistic visitor, registered-user and administrator journeys.
+Manual testing was carried out using both the local development application and the deployed Heroku application. Tests were performed through the browser using realistic visitor, registered-user and administrator journeys.
 
 Each result below records:
 
@@ -152,7 +152,7 @@ Each result below records:
 - the observed result;
 - the final status.
 
-A total of **64 completed manual checks currently pass**. One media-related check remains pending because final event images have not yet been uploaded.
+A total of **73 completed manual checks currently pass** across local and production testing. Final event-image verification remains pending because the production imagery has not yet been uploaded.
 
 ---
 
@@ -286,7 +286,7 @@ A total of **64 completed manual checks currently pass**. One media-related chec
 
 # Issues Identified and Regression Tested
 
-Testing and the subsequent robustness audit identified several failure paths that were not apparent during the initial successful user journeys. Each issue below was corrected and backed by automated regression coverage.
+Testing and the subsequent robustness audit identified several failure paths and presentation issues that were not apparent during the initial successful user journeys. Each issue below was corrected and retested, with automated regression coverage added where appropriate.
 
 ## Cancellation Email Failure After Successful Refund
 
@@ -302,6 +302,16 @@ The refund itself had already succeeded, the booking had been marked as cancelle
 Cancellation email delivery was changed so SMTP and connection failures are logged without undoing or obscuring the successful refund and cancellation.
 
 Manual tests D7 and D10 were repeated after the fix and passed.
+
+## Profile Booking Card Expanded to Full Width
+
+During production acceptance testing after a successful Stripe booking, the profile page showed a single booking card stretched across the full available row rather than retaining a normal card width.
+
+The cause was the profile booking grid using an `auto-fit` column definition with `minmax(280px, 1fr)`. With only one booking present, the single grid column expanded to consume all remaining horizontal space.
+
+The grid was updated to cap desktop booking columns at 360px and align them from the start of the row while preserving the existing full-width mobile layout.
+
+The fix was verified locally, committed, redeployed to Heroku and then retested on the live profile page. The booking card displayed at the intended card width in production.
 
 ## Additional Robustness Regression Coverage
 
@@ -330,13 +340,13 @@ These regression tests supplement the original functional tests by exercising fa
 
 ---
 
-# Pending Testing
+# Final Media and Production Testing
 
-The following checks are deliberately not marked as passed because the necessary final conditions do not yet exist.
+The final media checks remain deliberately unpassed because the required event imagery does not yet exist. Production acceptance results are recorded below, with only the media-specific production check still pending.
 
 ## Event Images
 
-**G8 remains pending.**
+**G8 remains pending, and production media check P7 is also pending.**
 
 Final event imagery still needs to be selected and uploaded so that it matches the event catalogue and descriptions. Once images are present, testing should verify:
 
@@ -349,22 +359,26 @@ Final event imagery still needs to be selected and uploaded so that it matches t
 
 ## Production / Heroku
 
-Production-specific testing will be completed after the final application is deployed to Heroku.
+Production-specific testing was carried out against the final Heroku deployment after the current application code was released.
 
-The production acceptance pass should include:
+Before browser acceptance testing, the deployed application was also checked with Django's production deployment checks. The production check returned only the optional HSTS warning, HTTPS loaded correctly, and HTTP requests redirected to HTTPS with a 301 response.
 
-| ID | Production Test | Expected Result | Status |
-|---|---|---|:---:|
-| P1 | Open deployed homepage. | Application loads over HTTPS without server errors. | Pending |
-| P2 | Test deployed navigation and internal links. | All major links resolve correctly. | Pending |
-| P3 | Register, log in and log out in production. | Authentication works correctly with secure production settings. | Pending |
-| P4 | Search and filter deployed events. | Search/filter behaviour matches local development. | Pending |
-| P5 | Complete a Stripe test payment against the deployed application. | Checkout, webhook and confirmation flow work correctly. | Pending |
-| P6 | Cancel a deployed test booking. | Refund, cancellation state, capacity restoration and email handling work correctly. | Pending |
-| P7 | Verify production media. | S3-hosted event images load correctly. | Pending |
-| P8 | Verify static assets. | CSS and JavaScript load without missing-file errors. | Pending |
-| P9 | Test production 404 behaviour. | Production-safe 404 page/response appears with `DEBUG=False`. | Pending |
-| P10 | Verify responsive layouts on the deployed site. | Production presentation matches the tested local application. | Pending |
+The production acceptance results are:
+
+| ID | Production Test | Expected Result | Actual Result | Status |
+|---|---|---|---|:---:|
+| P1 | Open deployed homepage. | Application loads over HTTPS without server errors. | Homepage loaded successfully over HTTPS with normal styling and content. No application/server error occurred. | Pass |
+| P2 | Test deployed navigation and internal links. | All major links resolve correctly. | Home/brand, Explore, About, account/profile and event-detail navigation all resolved correctly without 404 or 500 errors. | Pass |
+| P3 | Register, log in and log out in production. | Authentication works correctly with secure production settings. | A new production test account was registered successfully, logged out successfully and then logged back in successfully. | Pass |
+| P4 | Search and filter deployed events. | Search/filter behaviour matches local development. | Search and category filtering behaved correctly. Clearing the search term returned the full event catalogue as expected. | Pass |
+| P5 | Complete a Stripe test payment against the deployed application. | Checkout, webhook and confirmation flow work correctly. | Stripe Checkout opened with the correct booking, the test payment completed, the booking-success page loaded and the confirmed booking appeared on the user's profile with the correct event, quantity and total. | Pass |
+| P6 | Cancel a deployed test booking. | Refund, cancellation state, capacity restoration and email handling work correctly. | Cancellation returned the user to the profile, the booking changed to Cancelled with Refund Requested, remaining capacity returned from 17 to 18 and the cancellation email was received. | Pass |
+| P7 | Verify production media. | S3-hosted event images load correctly. | Final event images have not yet been uploaded, so production media cannot yet be meaningfully verified. | Pending |
+| P8 | Verify static assets. | CSS and JavaScript load without missing-file errors. | CSS and JavaScript loaded correctly across the deployed pages tested. No static-asset errors appeared in the console apart from the known missing favicon, which has not yet been created. | Pass |
+| P9 | Test production 404 behaviour. | Production-safe 404 page/response appears with `DEBUG=False`. | A nonexistent deployed URL returned a normal production Not Found page with HTTP 404 and no Django debug traceback. | Pass |
+| P10 | Verify responsive layouts on the deployed site. | Production presentation matches the tested local application. | Homepage, catalogue, event detail and profile layouts behaved correctly at desktop, tablet and mobile widths without clipping, overlap or horizontal layout failure. | Pass |
+
+**Production acceptance result: 9/10 checks passed, with P7 pending until final event imagery is uploaded.**
 
 ---
 
@@ -383,10 +397,10 @@ Current verified testing status:
 | Validation/error-handling manual tests   |         **8/8 passed** |
 | Responsive/accessibility completed tests |         **9/9 passed** |
 | Media tests                              |          **1 pending** |
-| Production deployment tests              | **Pending deployment** |
+| Production deployment tests              | **9/10 passed, 1 pending** |
 
-**Current completed manual testing: 64/64 passed.**
+**Current completed manual testing: 73/73 passed.**
 
 Automated coverage now includes successful application behaviour together with regression tests for payment-service failures, email failures, refund retry safety, asynchronous payment completion, failed-refund tracking, event-start enforcement, British Summer Time handling, historical payment-value preservation, concurrent duplicate webhook delivery and database-level booking validation.
 
-The local automated and manual testing phases are complete for the functionality tested so far, apart from final event-image verification. Production-specific acceptance checks will be completed after the final Heroku deployment.
+The local automated testing, local manual testing and production acceptance testing are complete for the functionality currently available. Final event-image verification remains outstanding and will complete both G8 and production check P7 once the final imagery is uploaded.
