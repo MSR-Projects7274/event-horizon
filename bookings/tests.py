@@ -699,6 +699,46 @@ class WebhookTests(TestCase):
 
     @patch('bookings.webhook.send_mail')
     @patch('bookings.webhook.stripe.Webhook.construct_event')
+    def test_async_payment_succeeded_creates_booking_and_sends_email(
+        self,
+        mock_construct_event,
+        mock_send_mail,
+    ):
+        session = self.stripe_session(
+            session_id='cs_async_success',
+            quantity='2',
+        )
+        mock_construct_event.return_value = self.stripe_event(
+            session,
+            event_type='checkout.session.async_payment_succeeded',
+        )
+
+        response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            Booking.objects.filter(
+                stripe_session_id='cs_async_success'
+            ).exists()
+        )
+
+        booking = Booking.objects.get(
+            stripe_session_id='cs_async_success'
+        )
+
+        self.assertEqual(booking.user, self.user)
+        self.assertEqual(booking.event, self.event)
+        self.assertEqual(booking.quantity, 2)
+        self.assertEqual(booking.status, 'confirmed')
+        mock_send_mail.assert_called_once()
+
+    @patch('bookings.webhook.send_mail')
+    @patch('bookings.webhook.stripe.Webhook.construct_event')
     def test_paid_checkout_creates_booking_and_sends_email(
         self,
         mock_construct_event,

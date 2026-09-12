@@ -89,9 +89,12 @@ def stripe_webhook(request):
     except stripe.error.SignatureVerificationError:
         return HttpResponse(status=400)
 
-    # Only process completed Checkout Sessions
+    # Process immediate and delayed successful Checkout payments
 
-    if stripe_event['type'] != 'checkout.session.completed':
+    if stripe_event['type'] not in (
+        'checkout.session.completed',
+        'checkout.session.async_payment_succeeded',
+    ):
         return HttpResponse(status=200)
 
     session = stripe_event['data']['object']
