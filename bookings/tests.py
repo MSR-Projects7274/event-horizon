@@ -270,6 +270,31 @@ class CheckoutViewTests(TestCase):
             "You're going!",
         )
 
+    def test_booking_success_shows_refund_processing_when_refund_id_is_missing(self):
+        booking = Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=1,
+            stripe_session_id='cs_refund_processing',
+            status='cancelled',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse('booking_success'),
+            {'session_id': booking.stripe_session_id},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Your refund is still being processed automatically.',
+        )
+        self.assertNotContains(
+            response,
+            'A refund has been requested automatically.',
+        )
+
     def test_booking_success_displays_users_booking(self):
         booking = Booking.objects.create(
             user=self.user,

@@ -115,9 +115,19 @@
                 remaining places to complete your booking.
             </p>
 
-            <p>
-                A refund has been requested automatically.
-            </p>
+            {% if cancelled_booking.stripe_refund_id %}
+
+                <p>
+                    A refund has been requested automatically.
+                </p>
+
+            {% else %}
+
+                <p>
+                    Your refund is still being processed automatically.
+                </p>
+
+            {% endif %}
 
             <p class="booking-reference">
                 Booking reference:
