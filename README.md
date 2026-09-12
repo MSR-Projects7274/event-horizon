@@ -924,6 +924,10 @@ The application can then be accessed through the local development server.
 
 Event Horizon is deployed using Heroku.
 
+**Live site:** [Event Horizon](https://event-horizon-msr-028f3aad28a4.herokuapp.com/)
+
+The current production deployment has been verified through the production acceptance tests documented in `TESTING.md`. **9 of 10 production checks currently pass**, with only the production media check remaining pending until the final event images are uploaded.
+
 The application uses the Heroku Python buildpack and is deployed on the **Heroku-24 stack**.
 
 The deployment process installs the dependencies listed in `requirements.txt` and runs Django's `collectstatic` command to prepare the application's static files.
@@ -1150,9 +1154,13 @@ Event Horizon uses a combination of automated Django tests and manual browser-ba
 
 The automated test suite currently contains **76 passing tests** covering authentication, event discovery, booking behaviour, data-integrity constraints, event timing, Stripe Checkout, immediate and asynchronous webhook handling, refunds, failed-refund tracking, capacity management and user permissions.
 
-Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts and accessibility. **64 completed manual checks currently pass**, with event-image verification pending until final imagery is uploaded. Production-specific testing will be completed against the final Heroku deployment.
+Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts and accessibility. **73 completed manual checks currently pass** across local and production testing.
 
-Full testing procedures, results, discovered issues and pending production checks are documented separately:
+The deployed Heroku application has completed its production acceptance pass with **9 of 10 production checks passing**. This includes HTTPS loading, navigation, authentication, search and filtering, Stripe test payment and webhook confirmation, booking cancellation and refund handling, capacity restoration, cancellation email delivery, static assets, production-safe 404 behaviour and responsive layouts.
+
+The only remaining production check is **P7 production media**, which is deliberately pending until the final event images are uploaded. The matching local media check, **G8**, also remains pending for the same reason.
+
+Full testing procedures, results, discovered issues and the remaining media checks are documented separately:
 
 **[View the complete testing documentation](TESTING.md)**
 
