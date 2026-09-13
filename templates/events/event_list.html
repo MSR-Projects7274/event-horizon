@@ -7,21 +7,26 @@
 <section class="events-page">
 
     <div class="events-header">
+
         <h1>Discover Your Next Experience</h1>
 
         <p>
             Explore upcoming events and find something worth experiencing.
         </p>
+
     </div>
 
     {% if search_query %}
+
         <p>
             Search results for:
             <strong>"{{ search_query }}"</strong>
         </p>
+
     {% endif %}
 
     <nav class="category-filter" aria-label="Event categories">
+
         <a
             href="{% url 'event_list' %}{% if search_query %}?q={{ search_query|urlencode }}{% endif %}"
             class="{% if not selected_category %}active{% endif %}"
@@ -33,12 +38,13 @@
 
             <a
                 href="{% url 'event_list' %}?category={{ category.id }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
-                class="{% if selected_category == category.id|stringformat:'s' %}active{% endif %}"
+                class="{% if selected_category == category.id %}active{% endif %}"
             >
                 {{ category.name }}
             </a>
 
         {% endfor %}
+
     </nav>
 
     {% if events %}
@@ -46,23 +52,30 @@
         <div class="event-grid">
 
             {% for event in events %}
+
                 {% with places_remaining=event.places_remaining %}
 
                 <article class="event-card {% if places_remaining <= 0 %}sold-out-card{% endif %}">
 
-                {% if places_remaining <= 0 %}
-                    <div class="sold-out-overlay">
-                        <span>SOLD OUT</span>
-                    </div>
-                {% endif %}
+                    {% if places_remaining <= 0 %}
+
+                        <div class="sold-out-overlay">
+                            <span>SOLD OUT</span>
+                        </div>
+
+                    {% endif %}
 
                     {% if event.image %}
+
                         <div class="event-card-image">
+
                             <img
                                 src="{{ event.image.url }}"
                                 alt="{{ event.name }}"
                             >
+
                         </div>
+
                     {% endif %}
 
                     <div class="event-card-content">
@@ -97,12 +110,12 @@
 
                             {% if places_remaining > 0 %}
 
-                            <a
-                                href="{% url 'event_detail' event.id %}"
-                                class="event-view-button"
-                            >
-                                View Event
-                            </a>
+                                <a
+                                    href="{% url 'event_detail' event.id %}"
+                                    class="event-view-button"
+                                >
+                                    View Event
+                                </a>
 
                             {% else %}
 
@@ -117,7 +130,9 @@
                     </div>
 
                 </article>
+
                 {% endwith %}
+
             {% endfor %}
 
         </div>
@@ -125,13 +140,21 @@
     {% else %}
 
         {% if search_query and selected_category %}
+
             <p>No upcoming events found matching your search in this category.</p>
+
         {% elif search_query %}
+
             <p>No upcoming events found matching your search.</p>
+
         {% elif selected_category %}
+
             <p>There are no upcoming events in this category.</p>
+
         {% else %}
+
             <p>There are no upcoming events at the moment.</p>
+
         {% endif %}
 
     {% endif %}
