@@ -4,23 +4,34 @@ This document records the testing carried out for Event Horizon.
 
 Testing combines automated Django tests with manual browser-based testing. Automated tests cover repeatable backend behaviour, authentication, booking rules, Stripe boundaries and webhook handling. Manual testing covers complete user journeys, administrator functionality, visual behaviour, validation, responsiveness, accessibility and external-service behaviour that cannot be fully demonstrated through unit tests alone.
 
-Testing results in this document reflect tests that were actually carried out. Local testing and the final Heroku production acceptance pass are now complete for the functionality currently available. Final event-image/media verification remains pending because the production event imagery has not yet been uploaded.
+Testing results in this document reflect tests that were actually carried out. Local testing, final event-image/media verification and the Heroku production acceptance pass are now complete for the functionality currently available.
 
 ---
 
 ## Table of Contents
 
 - [Automated Testing](#automated-testing)
+
 - [Manual Testing](#manual-testing)
+
   - [A. Authentication](#a-authentication)
+
   - [B. Navigation, Search and Event Discovery](#b-navigation-search-and-event-discovery)
+
   - [C. Booking Flow and Capacity](#c-booking-flow-and-capacity)
+
   - [D. Payment, Confirmation and Cancellation](#d-payment-confirmation-and-cancellation)
+
   - [E. Administrator Functionality](#e-administrator-functionality)
+
   - [F. Validation, Feedback and Error Handling](#f-validation-feedback-and-error-handling)
+
   - [G. Responsive Design, Accessibility, Static Files and Media](#g-responsive-design-accessibility-static-files-and-media)
+
 - [Issues Identified and Regression Tested](#issues-identified-and-regression-tested)
+
 - [Final Media and Production Testing](#final-media-and-production-testing)
+
 - [Testing Summary](#testing-summary)
 
 ---
@@ -34,15 +45,19 @@ The suite uses Django's `TestCase` together with `unittest.mock.patch` where ext
 The full suite can be run with:
 
 ```bash
+
 python manage.py test
+
 ```
 
 Latest verified result:
 
 ```text
+
 Ran 76 tests
 
 OK
+
 ```
 
 All **76 automated tests passed**.
@@ -60,68 +75,131 @@ All **76 automated tests passed**.
 The automated suite verifies behaviour including:
 
 * public home and About page rendering;
+
 * upcoming and active event filtering;
+
 * featured-event limits;
+
 * registration page access;
+
 * authenticated-user redirects away from login and registration;
+
 * required registration email validation;
+
 * valid user registration;
+
 * protected profile access;
+
 * profile booking ownership;
+
 * profile email updates;
+
 * password changes while preserving the session;
+
 * category and event string representations;
+
 * event start-time evaluation using the configured Europe/London timezone, including British Summer Time;
+
 * booked and remaining capacity calculations;
+
 * confirmed bookings being counted while cancelled bookings are excluded;
+
 * booking total-price and price-per-place calculations using the amount originally paid;
+
 * database enforcement preventing zero-quantity bookings;
+
 * validation and database enforcement preventing zero or negative event prices;
+
 * prevention of reducing event capacity below confirmed booked places;
+
 * protected event/category relationships where historical booking data would otherwise be deleted;
+
 * view-only protection for Stripe-managed bookings in Django Admin;
+
 * active-only event listings;
+
 * search by event name, description, location and category;
+
 * category filtering;
+
 * inactive event 404 handling;
+
 * authenticated booking access;
+
 * prevention of booking events that have already started;
+
 * sold-out booking prevention;
+
 * GET-only booking-form behaviour;
+
 * prevention of access to another user's cancellation route;
+
 * prevention of cancellation after an event has started;
+
 * successful refund and booking cancellation;
+
 * graceful handling of cancellation email failures;
+
 * deterministic Stripe idempotency keys for cancellation refunds;
+
 * safe cancellation retry when Stripe has refunded but the local booking update initially fails;
+
 * authenticated access to Stripe Checkout;
+
 * invalid, zero, negative and malformed checkout quantities;
+
 * requests above remaining event capacity;
+
 * missing customer email handling;
+
 * valid Stripe Checkout Session creation;
+
 * graceful handling of Stripe Checkout Session creation failures;
+
 * reversed absolute success and cancellation URLs;
+
 * booking-success session requirements;
+
 * booking-confirmation ownership;
+
 * delayed webhook handling after a successful Stripe redirect;
+
 * separate confirmed, refund-requested, refund-processing and refund-failed presentation states;
+
 * malformed Stripe webhook payloads;
+
 * invalid Stripe webhook signatures;
+
 * ignored unrelated webhook event types;
+
 * ignored unpaid checkout sessions;
+
 * successful immediate paid booking creation;
+
 * successful delayed payment fulfilment through `checkout.session.async_payment_succeeded`;
+
 * preservation of the amount originally paid if an event price later changes;
+
 * graceful handling of booking-confirmation email failures;
+
 * duplicate webhook protection;
+
 * concurrent duplicate webhook protection after acquiring the event lock;
+
 * webhook-side capacity enforcement;
+
 * automatic refunds when capacity becomes unavailable after payment;
+
 * retry-safe refunds when an automatic capacity refund temporarily fails;
+
 * automatic refunds when the booking user no longer exists;
+
 * automatic refunds when the referenced event becomes unavailable or has already started;
+
 * recording of Stripe `refund.failed` events against the affected booking;
+
 * user-facing failed-refund status presentation;
+
 * confirmation email triggering only for successfully fulfilled bookings.
 
 ## Stripe Mocking
@@ -131,10 +209,15 @@ External Stripe calls are mocked during automated testing.
 This allows the application to verify what would be sent to Stripe and how simulated Stripe responses are handled while ensuring the test suite:
 
 * does not create real payments;
+
 * does not issue real refunds;
+
 * does not require network access;
+
 * does not rely on a live Stripe account;
+
 * can reliably reproduce success, failure and retry scenarios;
+
 * can verify Stripe idempotency keys without creating duplicate refund operations.
 
 Manual Stripe testing is also carried out separately using Stripe's test environment.
@@ -148,11 +231,14 @@ Manual testing was carried out using both the local development application and 
 Each result below records:
 
 - the action tested;
+
 - the expected result;
+
 - the observed result;
+
 - the final status.
 
-A total of **73 completed manual checks currently pass** across local and production testing. Final event-image verification remains pending because the production imagery has not yet been uploaded.
+A total of **75/75 manual checks pass** across local and production testing.
 
 ---
 
@@ -276,11 +362,11 @@ A total of **73 completed manual checks currently pass** across local and produc
 | G5 | View event detail and booking pages at mobile width. | Details, quantity controls and buttons remain usable. | Pages displayed and functioned correctly. | Pass |
 | G6 | View login, registration and profile pages at mobile width. | Forms fit the screen and controls remain usable. | Forms remained usable. Further visual centring/polish is planned but no functional responsive defect was found. | Pass |
 | G7 | Navigate primary controls using the Tab key. | Interactive controls can be reached in a sensible order and focus is visible. | Keyboard navigation and visible focus worked correctly. | Pass |
-| G8 | Verify event images. | Event images load correctly and are not broken. | Final event images have not yet been uploaded, so this cannot yet be meaningfully tested. | Pending |
+| G8 | Verify event images. | Event images load correctly and are not broken. | All 70 final event images were uploaded through Django Admin to the configured S3-backed media storage and checked category by category on the deployed site. Images loaded correctly on event cards and detail pages with no broken image links observed. | Pass |
 | G9 | Check CSS and JavaScript behaviour. | Styling and interactive effects function correctly. | Styling and JavaScript, including special-event effects/navigation, worked correctly. | Pass |
 | G10 | Zoom a normal page to approximately 200%. | Core content remains readable and usable without major overlap or loss of information. | Content remained readable and usable. | Pass |
 
-**Responsive/accessibility result: 9 completed checks passed, 1 media check pending.**
+**Responsive/accessibility/static/media result: 10/10 passed.**
 
 ---
 
@@ -293,8 +379,11 @@ Testing and the subsequent robustness audit identified several failure paths and
 During manual cancellation testing, the email provider rejected a recipient address using the reserved `example.com` domain and raised an SMTP error:
 
 ```text
+
 SMTPDataError
+
 550 Invalid `to` field
+
 ```
 
 The refund itself had already succeeded, the booking had been marked as cancelled and the released places had been returned to the event capacity. However, the email exception propagated through the request and caused a server error instead of returning the user to the profile.
@@ -312,6 +401,20 @@ The cause was the profile booking grid using an `auto-fit` column definition wit
 The grid was updated to cap desktop booking columns at 360px and align them from the start of the row while preserving the existing full-width mobile layout.
 
 The fix was verified locally, committed, redeployed to Heroku and then retested on the live profile page. The booking card displayed at the intended card width in production.
+
+## Category Filter Active State Did Not Highlight
+
+During final production-polish testing, category filtering itself worked correctly, but the selected category chip did not receive the expected active styling. The view converted the `category` query-string value to an integer and passed that integer as `selected_category`, while the template compared it against a string-formatted category ID.
+
+The template comparison was corrected to compare `selected_category` directly with `category.id`.
+
+The fix was verified locally, the `events` test suite was rerun with **30/30 tests passing**, and the change was then deployed and confirmed on the live Heroku site.
+
+## Missing Favicon
+
+Production browser testing initially showed a missing favicon request. A dedicated `static/images/favicon.svg` asset was created and linked from the shared `base.html` template using Django's static-file handling.
+
+The favicon was verified locally, committed, pushed to GitHub, deployed to Heroku and confirmed working on the live site.
 
 ## Additional Robustness Regression Coverage
 
@@ -342,20 +445,23 @@ These regression tests supplement the original functional tests by exercising fa
 
 # Final Media and Production Testing
 
-The final media checks remain deliberately unpassed because the required event imagery does not yet exist. Production acceptance results are recorded below, with only the media-specific production check still pending.
+Final event imagery and production media delivery were completed and verified after the main functional production acceptance pass.
 
 ## Event Images
 
-**G8 remains pending, and production media check P7 is also pending.**
+**G8 and production media check P7 both pass.**
 
-Final event imagery still needs to be selected and uploaded so that it matches the event catalogue and descriptions. Once images are present, testing should verify:
+A complete set of **70 final event images** was uploaded through the live Django Admin across all seven event categories. Django stored the files using the configured S3-backed media storage.
 
-- images load successfully;
-- no broken image links appear;
-- event cards and detail pages use the correct image;
-- media is served correctly from the configured storage backend;
-- image dimensions do not damage responsive layouts;
-- image alternatives/accessibility are appropriate.
+Verification confirmed that:
+
+- all 70 event images are present in production;
+- images load successfully on the deployed site;
+- no broken image links were observed during the category-by-category checks;
+- event cards and event detail pages display the intended image;
+- media is served correctly from the configured S3 storage backend;
+- the event-card presentation remained visually consistent while the final imagery was added;
+- image `alt` text uses the event name through the shared event-list template.
 
 ## Production / Heroku
 
@@ -373,12 +479,12 @@ The production acceptance results are:
 | P4 | Search and filter deployed events. | Search/filter behaviour matches local development. | Search and category filtering behaved correctly. Clearing the search term returned the full event catalogue as expected. | Pass |
 | P5 | Complete a Stripe test payment against the deployed application. | Checkout, webhook and confirmation flow work correctly. | Stripe Checkout opened with the correct booking, the test payment completed, the booking-success page loaded and the confirmed booking appeared on the user's profile with the correct event, quantity and total. | Pass |
 | P6 | Cancel a deployed test booking. | Refund, cancellation state, capacity restoration and email handling work correctly. | Cancellation returned the user to the profile, the booking changed to Cancelled with Refund Requested, remaining capacity returned from 17 to 18 and the cancellation email was received. | Pass |
-| P7 | Verify production media. | S3-hosted event images load correctly. | Final event images have not yet been uploaded, so production media cannot yet be meaningfully verified. | Pending |
-| P8 | Verify static assets. | CSS and JavaScript load without missing-file errors. | CSS and JavaScript loaded correctly across the deployed pages tested. No static-asset errors appeared in the console apart from the known missing favicon, which has not yet been created. | Pass |
+| P7 | Verify production media. | S3-hosted event images load correctly. | All 70 final event images were uploaded through live Django Admin to the configured S3-backed storage and checked on the deployed site. Event images loaded correctly with no broken image links observed during the final category-by-category verification. | Pass |
+| P8 | Verify static assets. | CSS, JavaScript and favicon assets load without missing-file errors. | CSS and JavaScript loaded correctly across the deployed pages tested. The previously missing favicon was created, linked through Django static files, deployed and confirmed working on the live site. | Pass |
 | P9 | Test production 404 behaviour. | Production-safe 404 page/response appears with `DEBUG=False`. | A nonexistent deployed URL returned a normal production Not Found page with HTTP 404 and no Django debug traceback. | Pass |
 | P10 | Verify responsive layouts on the deployed site. | Production presentation matches the tested local application. | Homepage, catalogue, event detail and profile layouts behaved correctly at desktop, tablet and mobile widths without clipping, overlap or horizontal layout failure. | Pass |
 
-**Production acceptance result: 9/10 checks passed, with P7 pending until final event imagery is uploaded.**
+**Production acceptance result: 10/10 checks passed.**
 
 ---
 
@@ -395,12 +501,11 @@ Current verified testing status:
 | Payment/cancellation manual tests        |       **10/10 passed** |
 | Administrator manual tests               |         **8/8 passed** |
 | Validation/error-handling manual tests   |         **8/8 passed** |
-| Responsive/accessibility completed tests |         **9/9 passed** |
-| Media tests                              |          **1 pending** |
-| Production deployment tests              | **9/10 passed, 1 pending** |
+| Responsive/accessibility/static/media tests | **10/10 passed** |
+| Production deployment tests | **10/10 passed** |
 
-**Current completed manual testing: 73/73 passed.**
+**Current completed manual testing: 75/75 passed.**
 
 Automated coverage now includes successful application behaviour together with regression tests for payment-service failures, email failures, refund retry safety, asynchronous payment completion, failed-refund tracking, event-start enforcement, British Summer Time handling, historical payment-value preservation, concurrent duplicate webhook delivery and database-level booking validation.
 
-The local automated testing, local manual testing and production acceptance testing are complete for the functionality currently available. Final event-image verification remains outstanding and will complete both G8 and production check P7 once the final imagery is uploaded.
+The local automated testing, local manual testing, final event-image/media verification and production acceptance testing are complete for the functionality currently available. G8 and production check P7 now pass, bringing the final production acceptance result to 10/10 and completed manual testing to 75/75.

@@ -146,6 +146,8 @@ Search is available throughout the site so that users can continue discovering e
 
 Events can be filtered by category to help users narrow down the available choices.
 
+The currently selected category is visually highlighted so users can immediately see which filter is active.
+
 Categories are database-driven and are also used throughout the site to connect related events and provide alternative ways of discovering content.
 
 ## Event Details
@@ -228,6 +230,8 @@ Event images are stored using Amazon S3 rather than relying entirely on the appl
 
 Django's storage functionality is configured to communicate with S3, with Boto3 providing the AWS integration.
 
+The final production catalogue contains **70 event images across seven categories**. Images were uploaded through Django Admin so that Django handled the S3 upload and stored the correct media reference against each event.
+
 This allows uploaded event images to remain available when the application is deployed and avoids relying on files stored directly on the Heroku application filesystem.
 
 ## Not For The Faint Of Heart
@@ -259,6 +263,8 @@ Particular attention has been given to the mobile navigation and spacing of inte
 ## Static Files
 
 Django's static file handling is used for the project's CSS, JavaScript and other static assets.
+
+A custom Event Horizon SVG favicon is included in the shared base template and served through Django's static-file configuration.
 
 The project is configured to collect static files during deployment so that the front-end assets are available in the production environment.
 
@@ -387,7 +393,7 @@ The main areas of the project include:
   Contains the main Django project configuration, settings and URL configuration.
 
 - **Static files**  
-  Contains the project's CSS, JavaScript and other front-end assets.
+  Contains the project's CSS, JavaScript, favicon and other front-end assets.
 
 - **Templates**  
   Contains the HTML templates used to render the site's pages.
@@ -532,6 +538,8 @@ The frontend therefore does not contain its own independent event dataset. What 
 Search and category selections originate in the browser as request parameters.
 
 Django receives those values and uses them to filter the event queryset on the backend. The resulting matching events are then passed back to the same presentation layer.
+
+The selected category ID is also passed back to the template so the active filter can be visually highlighted for the user.
 
 This keeps filtering rules close to the database rather than requiring the browser to download the complete dataset and reproduce the business logic client-side.
 
@@ -926,7 +934,7 @@ Event Horizon is deployed using Heroku.
 
 **Live site:** [Event Horizon](https://event-horizon-msr-028f3aad28a4.herokuapp.com/)
 
-The current production deployment has been verified through the production acceptance tests documented in `TESTING.md`. **9 of 10 production checks currently pass**, with only the production media check remaining pending until the final event images are uploaded.
+The current production deployment has been verified through the production acceptance tests documented in `TESTING.md`. **All 10 production acceptance checks pass**, including final S3 media verification.
 
 The application uses the Heroku Python buildpack and is deployed on the **Heroku-24 stack**.
 
@@ -955,7 +963,7 @@ The project timezone is configured as `Europe/London`, allowing event start-time
 
 ## Static Files
 
-Django's static files are collected during the Heroku build process.
+Django's static files are collected during the Heroku build process. This includes the project's CSS, JavaScript and custom SVG favicon.
 
 The deployment initially encountered an issue where `collectstatic` failed because a required package was missing from the production dependencies. The dependency configuration was subsequently corrected so that the deployment environment contained the packages required by the application.
 
@@ -1084,7 +1092,7 @@ During development, the design was refined as the underlying booking, payment an
 | **Booking cancellation**           | Users would be able to manage eligible bookings.                                   | Cancellation includes booking ownership checks, Stripe refunds, status updates and automatic restoration of released event capacity.                                                  | Cancellation needed to affect both the financial transaction and the underlying capacity data rather than being only a visual status change.               |
 | **Special-event experience**       | The project would have a distinctive Event Horizon identity.                       | The **Not For The Faint Of Heart** category introduces restrained glitches, shifts and darker styling while retaining the same navigation and booking architecture.                   | The effect was kept deliberately localised so the unusual presentation adds character without compromising usability throughout the rest of the website.   |
 | **Responsive layout**              | Pages would need to remain usable across common screen sizes.                      | Navigation, cards, authentication pages, profiles, event details and booking interfaces were repeatedly refined for desktop, tablet and mobile layouts.                               | Responsive behaviour required practical adjustment once real content, controls and user journeys were available to test at different viewport sizes.       |
-| **Event media**                    | Events would be presented with appropriate imagery.                                | Uploaded event media is configured to use Amazon S3 rather than relying on the application's local filesystem.                                                                        | External media storage provides a more suitable architecture for the deployed application and avoids dependence on temporary Heroku filesystem storage.    |
+| **Event media**                    | Events would be presented with appropriate imagery.                                | The final catalogue uses 70 event images stored through Amazon S3, with uploads managed through Django Admin rather than the application's local filesystem.                            | External media storage provides a more suitable architecture for the deployed application and avoids dependence on temporary Heroku filesystem storage.    |
 
 ## Design Decisions Retained
 
@@ -1154,13 +1162,13 @@ Event Horizon uses a combination of automated Django tests and manual browser-ba
 
 The automated test suite currently contains **76 passing tests** covering authentication, event discovery, booking behaviour, data-integrity constraints, event timing, Stripe Checkout, immediate and asynchronous webhook handling, refunds, failed-refund tracking, capacity management and user permissions.
 
-Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts and accessibility. **73 completed manual checks currently pass** across local and production testing.
+Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts, accessibility and final production media. **75/75 completed manual checks pass** across local and production testing.
 
-The deployed Heroku application has completed its production acceptance pass with **9 of 10 production checks passing**. This includes HTTPS loading, navigation, authentication, search and filtering, Stripe test payment and webhook confirmation, booking cancellation and refund handling, capacity restoration, cancellation email delivery, static assets, production-safe 404 behaviour and responsive layouts.
+The deployed Heroku application has completed its production acceptance pass with **10/10 production checks passing**. This includes HTTPS loading, navigation, authentication, search and filtering, Stripe test payment and webhook confirmation, booking cancellation and refund handling, capacity restoration, cancellation email delivery, static assets, production-safe 404 behaviour, responsive layouts and final S3-hosted event media.
 
-The only remaining production check is **P7 production media**, which is deliberately pending until the final event images are uploaded. The matching local media check, **G8**, also remains pending for the same reason.
+The final media checks **G8** and **P7** now pass after all 70 event images were uploaded and verified on the deployed site. The category-filter active state and custom favicon were also verified after deployment.
 
-Full testing procedures, results, discovered issues and the remaining media checks are documented separately:
+Full testing procedures, results and discovered issues are documented separately:
 
 **[View the complete testing documentation](TESTING.md)**
 
@@ -1200,6 +1208,8 @@ Cancellation also needed to update the available capacity so that released place
 Moving uploaded event images away from the application's local filesystem introduced additional configuration requirements.
 
 Django's storage backend had to be configured to communicate with Amazon S3, with the appropriate AWS credentials and bucket configuration supplied through environment variables.
+
+The completed production catalogue contains 70 event images. Uploading them through Django Admin verified the full media path from the application to S3 and back to the deployed event cards and detail pages.
 
 ## Deployment
 
@@ -1274,7 +1284,7 @@ Several features evolved during development as the project was tested and refine
 
 ### Event Catalogue
 
-The original event catalogue developed into a more dynamic system using database-driven content, category filtering, search functionality and availability information.
+The original event catalogue developed into a more dynamic system using database-driven content, category filtering, search functionality and availability information. The selected category now receives a clear active state so users can see which filter is currently applied.
 
 ### Homepage
 
@@ -1298,7 +1308,11 @@ The special category developed into a deliberate visual contrast to the standard
 
 ### Media Storage
 
-Event images were moved towards external storage using Amazon S3 to provide a more suitable solution for the deployed application.
+Event images were moved to external storage using Amazon S3 to provide a more suitable solution for the deployed application. The final catalogue now includes 70 verified production event images across all seven categories.
+
+### Favicon
+
+A custom Event Horizon SVG favicon was added during final production polish and is served through Django's static-file configuration.
 
 ### Responsive Design
 
@@ -1342,7 +1356,6 @@ The following resources and technologies were used during the development of Eve
 - Amazon Web Services documentation
 - Heroku documentation
 - GitHub documentation
-
-- Favicons: Favicon.io
+- Event Images: Images generated using Perchance.org
 - Bug fixes and advice: ChatGPT provided guidance, code extracts and troubleshooting support
-- Favicon Design: Perchance.org
+- Favicon: Custom SVG created specifically for Event Horizon by ChatGPT
