@@ -1061,9 +1061,31 @@ Each user story was tested against the functionality implemented in the final ap
 
 # Wireframes
 
-The wireframes used during development will be included in this section to demonstrate the original layout and design planning for the project.
+Wireframes were created during the planning stage to establish the intended layout, navigation and responsive behaviour of the main Event Horizon pages before development began.
 
-Screenshots of the final implemented pages will also be included where appropriate to demonstrate how the original design developed into the finished application.
+The designs focus on the authenticated-user experience and cover the five core areas of the application:
+
+- Homepage
+- Event catalogue
+- Event detail page
+- About page
+- User profile and bookings page
+
+Both desktop and mobile layouts were planned so that the same core navigation and functionality could remain available while adapting the presentation to different screen sizes.
+
+## Desktop Wireframes
+
+The desktop design uses wider layouts for event grids, navigation and account information while keeping the main user journey visible and straightforward.
+
+![Event Horizon desktop wireframes for authenticated users](docs/images/wireframes/desktop-authenticated-wireframes.png)
+
+## Mobile Wireframes
+
+The mobile designs reorganise the same content into narrower single-column layouts. Event cards stack vertically, category controls wrap into a compact layout and account information remains accessible without requiring horizontal scrolling.
+
+![Event Horizon mobile wireframes for authenticated users](docs/images/wireframes/mobile-authenticated-wireframes.png)
+
+The final implementation evolved during development as real content, Stripe booking functionality, capacity states and responsive behaviour were introduced. These differences are discussed in the [Design and Final Implementation Comparison](#design-and-final-implementation-comparison) section.
 
 * * *
 
