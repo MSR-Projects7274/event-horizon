@@ -1,3 +1,4 @@
+from django.db import models
 from django.shortcuts import render
 from django.utils import timezone
 
@@ -7,11 +8,23 @@ from events.models import Event
 def home(request):
     """Display the Event Horizon homepage."""
 
-    today = timezone.localdate()
+    now = timezone.localtime()
+    current_date = now.date()
+    current_time = now.time().replace(tzinfo=None)
+
+    upcoming_filter = models.Q(date__gt=current_date)
+    upcoming_filter.add(
+        models.Q(
+            date=current_date,
+            time__gt=current_time,
+        ),
+        models.Q.OR,
+    )
 
     upcoming_events = Event.objects.filter(
-        active=True,
-        date__gte=today,
+        active=True
+    ).filter(
+        upcoming_filter
     ).select_related('category').order_by(
         'date',
         'time',
