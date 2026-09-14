@@ -1,5 +1,7 @@
 # Event Horizon
 
+![Event Horizon responsive design shown on desktop, tablet and mobile devices](docs/images/screenshots/event-horizon-responsive-showcase.png)
+
 * * *
 
 ## Table of Contents
