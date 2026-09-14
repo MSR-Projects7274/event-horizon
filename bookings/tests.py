@@ -173,7 +173,10 @@ class CheckoutViewTests(TestCase):
         self.assertEqual(kwargs['mode'], 'payment')
         self.assertEqual(kwargs['customer_email'], self.user.email)
         self.assertEqual(kwargs['line_items'][0]['quantity'], 2)
-        self.assertEqual(kwargs['line_items'][0]['price_data']['unit_amount'], 1250)
+        self.assertEqual(
+            kwargs['line_items'][0]['price_data']['unit_amount'],
+            1250,
+        )
         self.assertEqual(kwargs['metadata']['event_id'], str(self.event.id))
         self.assertEqual(kwargs['metadata']['user_id'], str(self.user.id))
         self.assertEqual(kwargs['metadata']['quantity'], '2')
@@ -270,7 +273,9 @@ class CheckoutViewTests(TestCase):
             "You're going!",
         )
 
-    def test_booking_success_shows_refund_processing_when_refund_id_is_missing(self):
+    def test_booking_success_shows_refund_processing_when_refund_id_is_missing(
+        self,
+    ):
         booking = Booking.objects.create(
             user=self.user,
             event=self.event,
@@ -690,9 +695,11 @@ class WebhookTests(TestCase):
 
     @patch('bookings.webhook.stripe.Webhook.construct_event')
     def test_webhook_rejects_invalid_signature(self, mock_construct_event):
-        mock_construct_event.side_effect = stripe.error.SignatureVerificationError(
-            'Invalid signature',
-            'test-signature',
+        mock_construct_event.side_effect = (
+            stripe.error.SignatureVerificationError(
+                'Invalid signature',
+                'test-signature',
+            )
         )
 
         response = self.client.post(

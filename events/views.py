@@ -36,25 +36,47 @@ def event_list(request):
     current_date = now.date()
     current_time = now.time().replace(tzinfo=None)
 
-    events = Event.objects.filter(
-        active=True
-    ).filter(
-        models.Q(date__gt=current_date) |
+    upcoming_filter = models.Q(date__gt=current_date)
+    upcoming_filter.add(
         models.Q(
             date=current_date,
             time__gt=current_time,
-        )
+        ),
+        models.Q.OR,
+    )
+
+    events = Event.objects.filter(
+        active=True
+    ).filter(
+        upcoming_filter
     ).select_related('category')
 
     categories = Category.objects.all()
 
     if search_query:
-        events = events.filter(
-            models.Q(name__icontains=search_query) |
-            models.Q(description__icontains=search_query) |
-            models.Q(location__icontains=search_query) |
-            models.Q(category__name__icontains=search_query)
+        search_filter = models.Q(
+            name__icontains=search_query
         )
+        search_filter.add(
+            models.Q(
+                description__icontains=search_query
+            ),
+            models.Q.OR,
+        )
+        search_filter.add(
+            models.Q(
+                location__icontains=search_query
+            ),
+            models.Q.OR,
+        )
+        search_filter.add(
+            models.Q(
+                category__name__icontains=search_query
+            ),
+            models.Q.OR,
+        )
+
+        events = events.filter(search_filter)
 
     if category_id:
         events = events.filter(category_id=category_id)
@@ -218,7 +240,10 @@ def cancel_booking(request, booking_id):
 
                 try:
                     send_mail(
-                        subject='Your Event Horizon booking has been cancelled',
+                        subject=(
+                            'Your Event Horizon booking has been '
+                            'cancelled'
+                        ),
                         message=plain_message,
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[customer_email],

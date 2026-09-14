@@ -61,7 +61,12 @@ class RegistrationTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context['form'].has_error('email', 'required'))
+        self.assertTrue(
+            response.context['form'].has_error(
+                'email',
+                'required',
+            )
+        )
         self.assertFalse(User.objects.filter(username='newuser').exists())
 
     def test_authenticated_user_is_redirected_from_login(self):

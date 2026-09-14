@@ -59,6 +59,11 @@ def create_checkout_session(request, event_id):
         event.price * 100
     )
 
+    success_url = request.build_absolute_uri(
+        reverse('booking_success')
+    )
+    success_url += '?session_id={CHECKOUT_SESSION_ID}'
+
     try:
         checkout_session = stripe.checkout.Session.create(
             mode='payment',
@@ -85,12 +90,7 @@ def create_checkout_session(request, event_id):
                 'user_id': str(request.user.id),
                 'quantity': str(quantity),
             },
-            success_url=(
-                request.build_absolute_uri(
-                    reverse('booking_success')
-                )
-                + '?session_id={CHECKOUT_SESSION_ID}'
-            ),
+            success_url=success_url,
             cancel_url=request.build_absolute_uri(
                 reverse(
                     'event_detail',
@@ -122,11 +122,9 @@ def booking_success(request):
         stripe_session_id=session_id,
     ).first()
 
-    if (
-        booking is not None
-        and booking.user_id != request.user.id
-    ):
-        raise Http404
+    if booking is not None:
+        if booking.user_id != request.user.id:
+            raise Http404
 
     confirmed_booking = None
     cancelled_booking = None

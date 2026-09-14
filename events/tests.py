@@ -422,7 +422,9 @@ class EventViewTests(TestCase):
         )
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse('cancel_booking', args=[booking.id]))
+        response = self.client.get(
+            reverse('cancel_booking', args=[booking.id])
+        )
 
         self.assertEqual(response.status_code, 404)
 
@@ -483,7 +485,9 @@ class EventViewTests(TestCase):
         mock_refund.return_value = SimpleNamespace(id='re_123')
         self.client.force_login(self.user)
 
-        response = self.client.post(reverse('cancel_booking', args=[booking.id]))
+        response = self.client.post(
+            reverse('cancel_booking', args=[booking.id])
+        )
 
         self.assertRedirects(response, reverse('profile'))
         booking.refresh_from_db()
@@ -613,7 +617,9 @@ class EventViewTests(TestCase):
         )
         self.client.force_login(self.user)
 
-        response = self.client.post(reverse('cancel_booking', args=[booking.id]))
+        response = self.client.post(
+            reverse('cancel_booking', args=[booking.id])
+        )
 
         self.assertRedirects(response, reverse('profile'))
         booking.refresh_from_db()

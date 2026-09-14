@@ -185,20 +185,18 @@ def stripe_webhook(request):
     ).first()
 
     if existing_booking:
-        if (
-            existing_booking.status == 'cancelled'
-            and not existing_booking.stripe_refund_id
-        ):
-            if not payment_intent:
+        if existing_booking.status == 'cancelled':
+            if not existing_booking.stripe_refund_id:
+                if not payment_intent:
+                    return HttpResponse(status=500)
+
+                if refund_unfulfillable_booking(
+                    existing_booking,
+                    payment_intent,
+                ):
+                    return HttpResponse(status=200)
+
                 return HttpResponse(status=500)
-
-            if refund_unfulfillable_booking(
-                existing_booking,
-                payment_intent,
-            ):
-                return HttpResponse(status=200)
-
-            return HttpResponse(status=500)
 
         return HttpResponse(status=200)
 
@@ -265,20 +263,18 @@ def stripe_webhook(request):
     # request was waiting for the event lock.
 
     if concurrent_booking:
-        if (
-            concurrent_booking.status == 'cancelled'
-            and not concurrent_booking.stripe_refund_id
-        ):
-            if not payment_intent:
+        if concurrent_booking.status == 'cancelled':
+            if not concurrent_booking.stripe_refund_id:
+                if not payment_intent:
+                    return HttpResponse(status=500)
+
+                if refund_unfulfillable_booking(
+                    concurrent_booking,
+                    payment_intent,
+                ):
+                    return HttpResponse(status=200)
+
                 return HttpResponse(status=500)
-
-            if refund_unfulfillable_booking(
-                concurrent_booking,
-                payment_intent,
-            ):
-                return HttpResponse(status=200)
-
-            return HttpResponse(status=500)
 
         return HttpResponse(status=200)
 
