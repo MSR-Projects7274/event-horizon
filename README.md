@@ -1042,20 +1042,70 @@ The following user stories were used to identify the core requirements of Event 
 
 <br>
 
-Each user story was tested against the functionality implemented in the final application.
+Each user story was tested against the functionality implemented in the final application. Screenshots from the deployed application and Django administration interface are included below as visual evidence of the completed user journeys.
 
 | User Story | Validation |
 |---|---|
-| Browse upcoming events | Users can access the event catalogue and view active upcoming events. |
-| Filter events by category | Users can select categories to narrow the displayed events. |
-| Create an account | Visitors can register for an account and authenticate successfully. |
-| Purchase a place | Registered users can select places and complete payment through Stripe Checkout. |
-| See bookings | Completed bookings are associated with the user's account and can be viewed through the profile. |
-| Cancel an eligible booking | Eligible bookings can be cancelled and the associated refund is processed. |
-| Create events | Administrators can create events through the Django administration interface. |
-| Edit event information | Administrators can update existing event information. |
-| Control event capacity | Available places are calculated from event capacity and existing bookings. |
-| View bookings | Administrators can view booking records through the administration interface. |
+| Browse upcoming events | Users can access the event catalogue and view active upcoming events, including event imagery, dates, locations, prices and links to individual event pages. |
+| Filter events by category | Users can select a category to narrow the displayed events. The selected category is visually highlighted so that the active filter is clear. |
+| Create an account | Visitors can register for an account using the registration form and authenticate successfully. |
+| Purchase a place | Registered users can select places and complete payment through Stripe Checkout. Successful payment results in a confirmed booking containing the event, quantity and amount paid. |
+| See bookings | Completed bookings are associated with the user's account and can be viewed through the profile, including their current booking status. |
+| Cancel an eligible booking | Eligible bookings can be cancelled. The profile reflects the cancelled state and displays the associated refund status. |
+| Create events | Administrators can create new event records through Django Admin, including category, event information, price, capacity and imagery. |
+| Edit event information | Administrators can update existing event records through Django Admin. |
+| Control event capacity | Event capacity can be configured by administrators and is used by the application when calculating remaining availability. |
+| View bookings | Administrators can view stored booking records through Django Admin, including the associated user, event, quantity and creation time. |
+
+## Visual Evidence
+
+### Browse Upcoming Events
+
+The event catalogue presents upcoming events as database-driven cards containing the information required for users to decide which event they would like to explore.
+
+![Event Horizon event catalogue showing upcoming event cards](docs/images/screenshots/event-catalogue.png)
+
+### Filter Events by Category
+
+Selecting a category filters the catalogue to matching events. The active category is visually highlighted to make the current filter clear.
+
+![Event Horizon event catalogue filtered to Food and Drink events](docs/images/screenshots/category-filter.png)
+
+### Create an Account
+
+Visitors can create an account using the registration form. Username, email, password and password confirmation are collected before the account is created.
+
+![Event Horizon account registration form](docs/images/screenshots/registration.png)
+
+### Purchase a Place
+
+After a successful Stripe payment, Event Horizon displays a booking confirmation containing the event information, number of places, price per place and total amount paid.
+
+![Event Horizon successful booking confirmation](docs/images/screenshots/booking-success.png)
+
+### View and Cancel Bookings
+
+The user profile displays bookings associated with the authenticated account. Confirmed bookings provide access to cancellation while cancelled bookings retain their historical information and display the current cancellation and refund state.
+
+![Event Horizon profile showing confirmed and cancelled bookings](docs/images/screenshots/profile-bookings.png)
+
+### Create Events
+
+Administrators can create new events through Django Admin and control the information used throughout the public event catalogue.
+
+![Django Admin form for creating an Event Horizon event](docs/images/screenshots/admin-event-management.png)
+
+### Edit Events and Control Capacity
+
+Existing events can be edited through Django Admin. Event capacity is stored as part of the event record and can be changed alongside the event's other catalogue information.
+
+![Django Admin form showing an existing Event Horizon event and its capacity](docs/images/screenshots/admin-event-edit.png)
+
+### View Bookings
+
+Administrators can view booking records through Django Admin, providing a central view of users, booked events, quantities and booking creation times.
+
+![Django Admin booking list for Event Horizon](docs/images/screenshots/admin-bookings.png)
 
 </details>
 
