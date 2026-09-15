@@ -212,6 +212,28 @@ class CheckoutViewTests(TestCase):
 
         mock_create.assert_called_once()
 
+    @patch('bookings.views.stripe.checkout.Session.create')
+    def test_checkout_shows_helpful_message_when_stripe_fails(
+        self,
+        mock_create,
+    ):
+        mock_create.side_effect = stripe.error.APIConnectionError(
+            'Temporary Stripe failure'
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('create_checkout_session', args=[self.event.id]),
+            {'quantity': 1},
+            follow=True,
+        )
+
+        self.assertContains(
+            response,
+            "We couldn't start your payment. Please try again.",
+        )
+        mock_create.assert_called_once()
+
     def test_booking_success_requires_session_id(self):
         self.client.force_login(self.user)
 
