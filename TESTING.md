@@ -4,13 +4,15 @@ This document records the testing carried out for Event Horizon.
 
 Testing combines automated Django tests with manual browser-based testing. Automated tests cover repeatable backend behaviour, authentication, booking rules, Stripe boundaries and webhook handling. Manual testing covers complete user journeys, administrator functionality, visual behaviour, validation, responsiveness, accessibility and external-service behaviour that cannot be fully demonstrated through unit tests alone.
 
-Testing results in this document reflect tests that were actually carried out. Local testing, final event-image/media verification and the Heroku production acceptance pass are now complete for the functionality currently available.
+Testing results in this document reflect tests that were actually carried out. Local testing, code validation, final event-image/media verification and the Heroku production acceptance pass are now complete for the functionality currently available.
 
 ---
 
 ## Table of Contents
 
 - [Automated Testing](#automated-testing)
+
+- [Code Validation](#code-validation)
 
 - [Manual Testing](#manual-testing)
 
@@ -224,6 +226,105 @@ Manual Stripe testing is also carried out separately using Stripe's test environ
 
 ---
 
+# Code Validation
+
+Final source-code validation was completed after the functional and robustness work.
+
+## Python - Flake8
+
+The project was checked with Flake8 using:
+
+```bash
+flake8 . --exclude=.venv,*/migrations/*,staticfiles
+```
+
+The final project-wide run completed with no output, confirming that no Flake8
+findings remained in the checked Python code.
+
+The cleanup included normal application files, tests, settings and the
+data-heavy `seed_events.py` management command. Long event-description strings
+were reformatted using adjacent Python string literals so the generated text
+remained unchanged while satisfying the line-length rules.
+
+After the Flake8 cleanup, the complete Django suite was run and all **76/76
+tests passed**.
+
+## HTML - W3C Nu HTML Checker
+
+Rendered HTML was checked with the W3C Nu HTML Checker. Public pages were
+validated from the deployed site, while authenticated pages were checked using
+their rendered page source so the validator received the final HTML rather than
+Django template syntax.
+
+Representative pages checked included:
+
+- homepage;
+- event catalogue;
+- event detail, including a `Not for the Faint of Heart` event;
+- About;
+- login;
+- registration;
+- profile;
+- edit profile;
+- change password;
+- booking form;
+- cancellation confirmation.
+
+The booking-success template was not manually validated through a fresh payment
+solely for validation. Its confirmed, pending and cancelled/refund states are
+covered by the automated booking tests.
+
+Two HTML issues were found during validation:
+
+1. The registration form used Django's `form.as_p` rendering. Password help text
+   contains a `<ul>`, which produced invalid paragraph nesting. The registration
+   form was changed to `form.as_div`.
+2. The change-password form had the same password-help nesting problem. A direct
+   switch to `form.as_div` changed the established layout, so the fields were
+   rendered explicitly and the password help list was placed in valid block-level
+   markup while preserving the original presentation.
+
+Both pages were rechecked after deployment and completed validation with **no
+errors or warnings**.
+
+## CSS - W3C CSS Validation Service
+
+The project contains one custom stylesheet:
+
+```text
+static/css/style.css
+```
+
+It was checked with the W3C CSS Validation Service and returned:
+
+```text
+Congratulations! No Error Found.
+```
+
+## JavaScript - JSHint
+
+The project contains one custom JavaScript file:
+
+```text
+static/js/main.js
+```
+
+JSHint reported no errors or warnings.
+
+The reported metrics were:
+
+- 14 functions;
+- largest function signature: 1 argument;
+- largest function: 21 statements;
+- maximum cyclomatic complexity: 6;
+- median cyclomatic complexity: 1.
+
+Following the HTML-validation fixes, the complete Django suite was run again and
+all **76/76 tests passed**. After the later homepage timing correction, the
+complete Django suite was run once more and all **76/76 tests passed**.
+
+---
+
 # Manual Testing
 
 Manual testing was carried out using both the local development application and the deployed Heroku application. Tests were performed through the browser using realistic visitor, registered-user and administrator journeys.
@@ -238,7 +339,7 @@ Each result below records:
 
 - the final status.
 
-A total of **75/75 manual checks pass** across local and production testing.
+A total of **76/76 manual checks pass** across local and production testing.
 
 ---
 
@@ -274,8 +375,9 @@ A total of **75/75 manual checks pass** across local and production testing.
 | B8 | Filter the catalogue by category. | Only events from the selected category are shown. | Category filtering worked correctly. | Pass |
 | B9 | Search for a value with no matches. | A sensible empty-results state appears without an error. | Empty-results state displayed correctly. | Pass |
 | B10 | Open an active event from the catalogue. | Correct event detail page loads with availability information. | Correct event detail page loaded. | Pass |
+| B11 | Allow a same-day event to pass its scheduled start time and refresh the homepage. | Started events no longer appear in the homepage upcoming or featured lists. | Production testing exposed date-only homepage filtering. The queryset was corrected to apply the event start time as well as the date, then retested locally and on Heroku; the affected started events disappeared from the homepage. | Pass after fix |
 
-**Navigation, search and discovery result: 10/10 passed.**
+**Navigation, search and discovery result: 11/11 passed.**
 
 ---
 
@@ -416,6 +518,29 @@ Production browser testing initially showed a missing favicon request. A dedicat
 
 The favicon was verified locally, committed, pushed to GitHub, deployed to Heroku and confirmed working on the live site.
 
+## Started Events Remained on the Homepage
+
+During final production follow-up testing, an event scheduled for 21:00 on the
+current date was still visible on the homepage after 22:30, even though it had
+correctly disappeared from the event catalogue.
+
+A production shell check confirmed that Django was using the correct
+`Europe/London` local time, the event's `has_started` property was `True`, and
+the event no longer matched the event-list queryset. This isolated the problem
+to the homepage query.
+
+The homepage had been filtering with `date__gte=today`, which kept every event
+dated today visible until midnight regardless of its start time. The homepage
+query was updated to use the same rule as the event catalogue: future dates are
+included, while events dated today are included only when their start time is
+still in the future.
+
+`home/views.py` passed Flake8, the `home` test suite passed, and the behaviour
+was checked locally before deployment. After the fix was pushed to GitHub and
+Heroku, the affected started events were confirmed absent from the live
+homepage.
+
+
 ## Additional Robustness Regression Coverage
 
 | Issue / Risk                                                                              | Resolution                                                                                                                                                            | Regression Evidence                                                                                                           |
@@ -496,16 +621,20 @@ Current verified testing status:
 | ---------------------------------------- | ---------------------: |
 | Automated Django tests                   |       **76/76 passed** |
 | Authentication manual tests              |         **9/9 passed** |
-| Navigation/search manual tests           |       **10/10 passed** |
+| Navigation/search manual tests           |       **11/11 passed** |
 | Booking/capacity manual tests            |       **10/10 passed** |
 | Payment/cancellation manual tests        |       **10/10 passed** |
 | Administrator manual tests               |         **8/8 passed** |
 | Validation/error-handling manual tests   |         **8/8 passed** |
 | Responsive/accessibility/static/media tests | **10/10 passed** |
 | Production deployment tests | **10/10 passed** |
+| Python / Flake8 validation               | **Pass - no findings** |
+| HTML / W3C Nu validation                 | **Pass - representative rendered pages** |
+| CSS / W3C validation                     | **Pass - no errors** |
+| JavaScript / JSHint validation           | **Pass - no errors or warnings** |
 
-**Current completed manual testing: 75/75 passed.**
+**Current completed manual testing: 76/76 passed.**
 
 Automated coverage now includes successful application behaviour together with regression tests for payment-service failures, email failures, refund retry safety, asynchronous payment completion, failed-refund tracking, event-start enforcement, British Summer Time handling, historical payment-value preservation, concurrent duplicate webhook delivery and database-level booking validation.
 
-The local automated testing, local manual testing, final event-image/media verification and production acceptance testing are complete for the functionality currently available. G8 and production check P7 now pass, bringing the final production acceptance result to 10/10 and completed manual testing to 75/75.
+The local automated testing, local manual testing, final event-image/media verification and production acceptance testing are complete for the functionality currently available. G8 and production check P7 now pass, bringing the final production acceptance result to 10/10 and completed manual testing to 76/76. Final Python, HTML, CSS and JavaScript validation also passed.
