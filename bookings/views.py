@@ -7,6 +7,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
+from events.forms import BookingForm
 from events.models import Booking, Event
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -34,18 +35,15 @@ def create_checkout_session(request, event_id):
             event_id=event.id,
         )
 
-    try:
-        quantity = int(
-            request.POST.get('quantity', 0)
-        )
-    except (TypeError, ValueError):
-        quantity = 0
+    form = BookingForm(request.POST)
 
-    if quantity < 1:
+    if not form.is_valid():
         return redirect(
             'event_detail',
             event_id=event.id,
         )
+
+    quantity = form.cleaned_data['quantity']
 
     if quantity > event.places_remaining:
         return redirect(
