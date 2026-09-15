@@ -1,5 +1,7 @@
 from django.db import models
 from django.shortcuts import redirect, render
+from django.urls import Resolver404
+from django.views.defaults import page_not_found
 from django.utils import timezone
 
 from events.models import Event
@@ -51,7 +53,9 @@ def about(request):
     )
 
 def redirect_not_found(request, exception):
-    """Redirect unknown URLs back to the homepage."""
+    """Redirect unknown URLs while preserving resource 404 responses."""
 
-    return redirect('home')
+    if isinstance(exception, Resolver404):
+        return redirect('home')
 
+    return page_not_found(request, exception)
