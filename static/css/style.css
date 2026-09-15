@@ -394,6 +394,40 @@ main {
     padding: 2rem 1rem;
 }
 
+/* Site Messages */
+
+.site-messages {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.site-message {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--eh-border-dark);
+    border-left: 4px solid var(--eh-accent);
+    border-radius: var(--eh-radius-small);
+    background-color: var(--eh-surface);
+    box-shadow: var(--eh-shadow);
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.site-message.info {
+    border-left-color: var(--eh-accent);
+    background-color: var(--eh-accent-soft);
+}
+
+.site-message.success {
+    border-left-color: #2f7d4a;
+    background-color: rgba(47, 125, 74, 0.08);
+}
+
+.site-message.error {
+    border-left-color: #a94442;
+    background-color: rgba(169, 68, 66, 0.08);
+}
+
 /* Site Search */
 
 .site-search {
