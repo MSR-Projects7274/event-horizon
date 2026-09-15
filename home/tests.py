@@ -1,7 +1,7 @@
 from datetime import time, timedelta
 from decimal import Decimal
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -88,3 +88,13 @@ class HomeViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'home/about.html')
+
+    @override_settings(DEBUG=False)
+    def test_unknown_url_redirects_to_home(self):
+        response = self.client.get('/definitely-not-a-real-page/')
+
+        self.assertRedirects(
+            response,
+            reverse('home'),
+        )
+
