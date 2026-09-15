@@ -1,5 +1,5 @@
 from django.db import models
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from events.models import Event
@@ -49,3 +49,9 @@ def about(request):
         request,
         'home/about.html',
     )
+
+def redirect_not_found(request, exception):
+    """Redirect unknown URLs back to the homepage."""
+
+    return redirect('home')
+
