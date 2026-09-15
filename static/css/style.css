@@ -535,6 +535,29 @@ footer {
     animation-play-state: paused;
 }
 
+.event-ticker:focus-within {
+    overflow: visible;
+}
+
+.event-ticker:focus-within .event-ticker-track {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: none;
+    transform: none;
+}
+
+.event-ticker:focus-within .event-ticker-item[aria-hidden="true"] {
+    display: none;
+}
+
+.event-ticker-item:focus-visible {
+    outline: 3px solid var(--eh-accent-dark);
+    outline-offset: 3px;
+    border-radius: var(--eh-radius-small);
+    background-color: var(--eh-accent-soft);
+}
+
 .event-ticker-item {
     display: flex;
     align-items: center;
