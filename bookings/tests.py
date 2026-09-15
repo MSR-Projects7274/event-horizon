@@ -187,8 +187,25 @@ class CheckoutViewTests(TestCase):
         )
         self.assertEqual(
             kwargs['cancel_url'],
-            f'http://testserver/events/{self.event.id}/',
+            (
+                f'http://testserver/events/{self.event.id}/'
+                '?payment_cancelled=1'
+            ),
         )
+
+    def test_cancelled_checkout_shows_helpful_message_without_booking(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse('event_detail', args=[self.event.id]),
+            {'payment_cancelled': '1'},
+        )
+
+        self.assertContains(
+            response,
+            'Payment was cancelled. No booking was created.',
+        )
+        self.assertEqual(Booking.objects.count(), 0)
 
     @patch('bookings.views.stripe.checkout.Session.create')
     def test_checkout_redirects_to_event_when_stripe_fails(
