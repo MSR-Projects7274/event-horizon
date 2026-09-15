@@ -14,6 +14,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
+    const prefersReducedMotion =
+        window.matchMedia(
+            '(prefers-reduced-motion: reduce)'
+        ).matches;
+
 
     /* Special Event Image */
 
@@ -23,7 +28,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const specialImage =
         document.querySelector('.special-event-image');
 
-    if (imageContainer && specialImage) {
+    if (
+        imageContainer &&
+        specialImage &&
+        !prefersReducedMotion
+    ) {
 
         imageContainer.addEventListener('mousemove', function (event) {
 
@@ -105,104 +114,112 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
 
-        /* Type Message */
+        if (prefersReducedMotion) {
 
-        const typeMessage = function (message) {
-
-            whisper.textContent = '';
-
-            let index = 0;
-
-            const typeNext = function () {
-
-                if (index >= message.length) {
-
-                    /*
-                    * Message is complete.
-                    * Keep it visible.
-                    */
-                    setTimeout(function () {
-
-                        eraseMessage(message);
-
-                    }, 6000);
-
-                    return;
-                }
-
-                whisper.textContent =
-                    message.substring(0, index + 1);
-
-                index++;
-
-                setTimeout(
-                    typeNext,
-                    70
-                );
-            };
-
-            typeNext();
-        };
-
-
-        /* Erase Message */
-
-        const eraseMessage = function (message) {
-
-            let index = message.length;
-
-            const eraseNext = function () {
-
-                if (index <= 0) {
-
-                    whisper.textContent = '';
-
-                    /*
-                    * Nothing happens here until
-                    * this timer finishes.
-                    */
-                    setTimeout(function () {
-
-                        startNextMessage();
-
-                    }, 10000);
-
-                    return;
-                }
-
-                index--;
-
-                whisper.textContent =
-                    message.substring(0, index);
-
-                setTimeout(
-                    eraseNext,
-                    90
-                );
-            };
-
-            eraseNext();
-        };
-
-
-        /* Start the next message */
-
-        const startNextMessage = function () {
-
-            const nextMessage =
+            whisper.textContent =
                 getRandomMessage();
 
-            typeMessage(nextMessage);
-        };
+        } else {
+
+            /* Type Message */
+
+            const typeMessage = function (message) {
+
+                whisper.textContent = '';
+
+                let index = 0;
+
+                const typeNext = function () {
+
+                    if (index >= message.length) {
+
+                        /*
+                        * Message is complete.
+                        * Keep it visible.
+                        */
+                        setTimeout(function () {
+
+                            eraseMessage(message);
+
+                        }, 6000);
+
+                        return;
+                    }
+
+                    whisper.textContent =
+                        message.substring(0, index + 1);
+
+                    index++;
+
+                    setTimeout(
+                        typeNext,
+                        70
+                    );
+                };
+
+                typeNext();
+            };
 
 
-        /* First message */
+            /* Erase Message */
 
-        setTimeout(function () {
+            const eraseMessage = function (message) {
 
-            startNextMessage();
+                let index = message.length;
 
-        }, 3000);
+                const eraseNext = function () {
+
+                    if (index <= 0) {
+
+                        whisper.textContent = '';
+
+                        /*
+                        * Nothing happens here until
+                        * this timer finishes.
+                        */
+                        setTimeout(function () {
+
+                            startNextMessage();
+
+                        }, 10000);
+
+                        return;
+                    }
+
+                    index--;
+
+                    whisper.textContent =
+                        message.substring(0, index);
+
+                    setTimeout(
+                        eraseNext,
+                        90
+                    );
+                };
+
+                eraseNext();
+            };
+
+
+            /* Start the next message */
+
+            const startNextMessage = function () {
+
+                const nextMessage =
+                    getRandomMessage();
+
+                typeMessage(nextMessage);
+            };
+
+
+            /* First message */
+
+            setTimeout(function () {
+
+                startNextMessage();
+
+            }, 3000);
+        }
 
     }
 

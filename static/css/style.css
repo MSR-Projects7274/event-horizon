@@ -2148,5 +2148,43 @@ main {
     font-size: clamp(1.8rem, 8vw, 2.8rem);
 }
 
+}
+
+/* Reduced Motion */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .event-ticker {
+        overflow: visible;
+    }
+
+    .event-ticker-track {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+        animation: none !important;
+        transform: none;
+    }
+
+    .event-ticker-item[aria-hidden="true"] {
+        display: none;
+    }
+
+    .special-event .event-detail-content h1 {
+        animation: none !important;
+        transform: none;
+    }
+
+    .special-event-image {
+        transition: none;
+    }
 
 }
