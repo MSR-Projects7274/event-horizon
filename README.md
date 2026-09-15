@@ -105,7 +105,7 @@ Administrators can manage the event catalogue, including creating and editing ev
 
 The homepage provides an introduction to Event Horizon and acts as the main starting point for discovering events.
 
-Upcoming active events are retrieved dynamically from the database rather than being hard-coded into the page.
+Upcoming active events are retrieved dynamically from the database rather than being hard-coded into the page. Events scheduled for the current day stop appearing once their start time has passed.
 
 The homepage includes:
 
@@ -1236,11 +1236,13 @@ Event Horizon uses a combination of automated Django tests and manual browser-ba
 
 The automated test suite currently contains **76 passing tests** covering authentication, event discovery, booking behaviour, data-integrity constraints, event timing, Stripe Checkout, immediate and asynchronous webhook handling, refunds, failed-refund tracking, capacity management and user permissions.
 
-Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts, accessibility and final production media. **75/75 completed manual checks pass** across local and production testing.
+Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts, accessibility and final production media. **76/76 completed manual checks pass** across local and production testing.
 
 The deployed Heroku application has completed its production acceptance pass with **10/10 production checks passing**. This includes HTTPS loading, navigation, authentication, search and filtering, Stripe test payment and webhook confirmation, booking cancellation and refund handling, capacity restoration, cancellation email delivery, static assets, production-safe 404 behaviour, responsive layouts and final S3-hosted event media.
 
-The final media checks **G8** and **P7** now pass after all 70 event images were uploaded and verified on the deployed site. The category-filter active state and custom favicon were also verified after deployment.
+Final code validation also passed. The Python codebase completed a project-wide Flake8 check with no findings, representative rendered pages passed the W3C Nu HTML Checker after the identified form-markup issues were corrected, the custom stylesheet passed W3C CSS validation with no errors, and the custom JavaScript passed JSHint with no errors or warnings.
+
+The final media checks **G8** and **P7** now pass after all 70 event images were uploaded and verified on the deployed site. The category-filter active state and custom favicon were also verified after deployment. A final homepage timing correction was additionally verified locally and in production so same-day events no longer remain visible after their scheduled start time.
 
 Full testing procedures, results and discovered issues are documented separately:
 
@@ -1362,7 +1364,7 @@ The original event catalogue developed into a more dynamic system using database
 
 ### Homepage
 
-The homepage was expanded beyond a simple event listing to include featured events, a scrolling event ticker, category discovery and calls to action.
+The homepage was expanded beyond a simple event listing to include featured events, a scrolling event ticker, category discovery and calls to action. Its event query was also refined so same-day events are removed from upcoming content once their scheduled start time has passed.
 
 ### Booking System
 
