@@ -88,6 +88,34 @@ class CheckoutViewTests(TestCase):
 
         mock_create.assert_not_called()
 
+    @patch('bookings.views.BookingForm', create=True)
+    @patch('bookings.views.stripe.checkout.Session.create')
+    def test_checkout_uses_booking_form_validation(
+        self,
+        mock_create,
+        mock_booking_form,
+    ):
+        mock_create.return_value = SimpleNamespace(
+            url='https://checkout.stripe.test/session'
+        )
+        form = mock_booking_form.return_value
+        form.is_valid.return_value = False
+
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('create_checkout_session', args=[self.event.id]),
+            {'quantity': 2},
+        )
+
+        mock_booking_form.assert_called_once()
+        form.is_valid.assert_called_once_with()
+        mock_create.assert_not_called()
+        self.assertRedirects(
+            response,
+            reverse('event_detail', args=[self.event.id]),
+        )
+
     @patch('bookings.views.stripe.checkout.Session.create')
     def test_checkout_rejects_quantity_above_remaining_capacity(
         self,
