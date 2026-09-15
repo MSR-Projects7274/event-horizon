@@ -231,6 +231,7 @@ class CheckoutViewTests(TestCase):
         self.assertContains(
             response,
             "We couldn't start your payment. Please try again.",
+            html=True,
         )
         mock_create.assert_called_once()
 

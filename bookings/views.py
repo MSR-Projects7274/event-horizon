@@ -1,6 +1,7 @@
 import stripe
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -99,6 +100,10 @@ def create_checkout_session(request, event_id):
             ),
         )
     except stripe.error.StripeError:
+        messages.error(
+            request,
+            "We couldn't start your payment. Please try again.",
+        )
         return redirect(
             'event_detail',
             event_id=event.id,

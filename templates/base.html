@@ -98,6 +98,16 @@
     </header>
 
     <main>
+        {% if messages %}
+            <div class="site-messages" aria-live="polite">
+                {% for message in messages %}
+                    <p class="site-message{% if message.tags %} {{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         {% block content %}
         {% endblock %}
     </main>
