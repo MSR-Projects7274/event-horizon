@@ -4,6 +4,7 @@ from smtplib import SMTPException
 import stripe
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.db import models
@@ -101,6 +102,12 @@ def event_detail(request, event_id):
         id=event_id,
         active=True,
     )
+
+    if request.GET.get('payment_cancelled') == '1':
+        messages.info(
+            request,
+            'Payment was cancelled. No booking was created.',
+        )
 
     return render(
         request,

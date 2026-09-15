@@ -65,6 +65,14 @@ def create_checkout_session(request, event_id):
     )
     success_url += '?session_id={CHECKOUT_SESSION_ID}'
 
+    cancel_url = request.build_absolute_uri(
+        reverse(
+            'event_detail',
+            kwargs={'event_id': event.id},
+        )
+    )
+    cancel_url += '?payment_cancelled=1'
+
     try:
         checkout_session = stripe.checkout.Session.create(
             mode='payment',
@@ -92,12 +100,7 @@ def create_checkout_session(request, event_id):
                 'quantity': str(quantity),
             },
             success_url=success_url,
-            cancel_url=request.build_absolute_uri(
-                reverse(
-                    'event_detail',
-                    kwargs={'event_id': event.id},
-                )
-            ),
+            cancel_url=cancel_url,
         )
     except stripe.error.StripeError:
         messages.error(
