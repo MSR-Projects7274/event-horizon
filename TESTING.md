@@ -462,7 +462,7 @@ A total of **76/76 manual checks pass** across local and production testing.
 | G3 | View homepage at mobile width. | Navigation works, content fits and no horizontal scrolling occurs. | Mobile homepage worked correctly. | Pass |
 | G4 | View event catalogue at mobile width. | Cards reflow cleanly and controls remain usable. | Catalogue displayed correctly. | Pass |
 | G5 | View event detail and booking pages at mobile width. | Details, quantity controls and buttons remain usable. | Pages displayed and functioned correctly. | Pass |
-| G6 | View login, registration and profile pages at mobile width. | Forms fit the screen and controls remain usable. | Forms remained usable. Further visual centring/polish is planned but no functional responsive defect was found. | Pass |
+| G6 | View login, registration and profile pages at mobile width. | Forms fit the screen and controls remain usable. | Forms remained usable and displayed correctly at mobile width. No functional responsive defect was found. | Pass |
 | G7 | Navigate primary controls using the Tab key. | Interactive controls can be reached in a sensible order and focus is visible. | Keyboard navigation and visible focus worked correctly. | Pass |
 | G8 | Verify event images. | Event images load correctly and are not broken. | All 70 final event images were uploaded through Django Admin to the configured S3-backed media storage and checked category by category on the deployed site. Images loaded correctly on event cards and detail pages with no broken image links observed. | Pass |
 | G9 | Check CSS and JavaScript behaviour. | Styling and interactive effects function correctly. | Styling and JavaScript, including special-event effects/navigation, worked correctly. | Pass |
