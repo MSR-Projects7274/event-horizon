@@ -1038,11 +1038,15 @@ The following user stories were used to identify the core requirements of Event 
 # User Story Validation
 
 <details>
+
 <summary><strong>Click to expand user story validation</strong></summary>
 
 <br>
 
 Each user story was tested against the functionality implemented in the final application. Screenshots from the deployed application and Django administration interface are included below as visual evidence of the completed user journeys.
+
+> **Screenshot date note:** Some validation screenshots show the original September–November 2026 event dates. After final validation, all 70 event dates were moved forward by 16 weeks to 4 January–1 March 2027 so that the complete event catalogue would remain available during assessment. Event times, ordering, booking behaviour and other event data were unchanged.
+
 
 | User Story | Validation |
 |---|---|
