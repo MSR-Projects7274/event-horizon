@@ -1302,7 +1302,48 @@ footer {
 }
 
 .cancel-booking-actions form {
+    width: 200px;
     margin: 0;
+}
+
+.cancel-booking-actions > .event-view-button {
+    width: 200px;
+}
+
+.cancel-booking-actions .cancel-button,
+.cancel-booking-actions > .event-view-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.6rem 1rem;
+    border-radius: var(--eh-radius-small);
+    font: inherit;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Primary action: confirm cancellation */
+.cancel-booking-actions .cancel-button {
+    width: 100%;
+    border: 1px solid var(--eh-night);
+    background-color: var(--eh-night);
+    color: #fff;
+}
+
+/* Secondary action: keep booking */
+.cancel-booking-actions > .event-view-button {
+    border: 1px solid #777;
+    background-color: #777;
+    color: #fff;
+}
+
+.cancel-booking-actions > .event-view-button:hover {
+    border-color: #666;
+    background-color: #666;
 }
 
 /* Cancelled Booking */
