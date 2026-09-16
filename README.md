@@ -375,21 +375,21 @@ Event Horizon was developed using the following technologies:
 
 # Project Structure
 
-Event Horizon follows Django's standard project structure, separating the main project configuration from individual applications responsible for specific areas of functionality.
+Event Horizon follows Django's standard project structure, separating the main project configuration from applications responsible for distinct areas of the product.
 
 The main areas of the project include:
 
 - **Events**  
-  Responsible for the event catalogue, event information, categories, availability and event management.
+  Owns the core event domain data and related business rules. The `Category`, `Event` and `Booking` models are defined here because booking records directly affect event capacity, availability, cancellation state and historical event relationships.
 
 - **Bookings**  
-  Responsible for creating and managing customer bookings, including the relationship between users and events.
+  Owns the payment workflow around those booking records, including Stripe Checkout Session creation, payment-return handling and Stripe webhook processing. The app intentionally does not define a second `Booking` model.
 
 - **Profiles / User functionality**  
-  Responsible for user accounts and displaying a user's booking information.
+  Responsible for account-related functionality and presenting a user's booking information.
 
 - **Home**  
-  Responsible for the homepage and event discovery content.
+  Responsible for the homepage, high-level event discovery and the top-level unknown-route handler.
 
 - **Event Horizon**  
   Contains the main Django project configuration, settings and URL configuration.
@@ -417,14 +417,18 @@ The project is divided into separate Django applications for `home`, `events`, `
 
 This separation was chosen so that each application has a clear responsibility:
 
-* `home` handles the homepage and high-level event discovery;
-* `events` manages event and category data, event presentation, availability and cancellation behaviour;
-* `bookings` handles Stripe Checkout, payment confirmation and the payment webhook flow;
+* `home` handles the homepage, high-level event discovery and the unknown-route redirect behaviour;
+* `events` owns the event-domain data, event presentation, availability, booking records and cancellation behaviour;
+* `bookings` handles Stripe Checkout, payment confirmation and webhook fulfilment;
 * `profiles` manages account-related functionality and presents a user's booking information.
 
-Separating these areas reduces the amount of unrelated logic contained in a single application and makes individual features easier to understand, test and maintain.
+Separating these areas reduces unrelated logic inside each application and makes individual features easier to understand, test and maintain. The main `event_horizon` project contains configuration that applies across the whole application, including settings and top-level URL routing.
 
-The main `event_horizon` project contains configuration that applies across the whole application, including settings and top-level URL routing.
+## Booking Model Placement
+
+The `Booking` model remains in the `events` application rather than being duplicated or moved into `bookings`. This is intentional: a booking is part of the event domain because it directly contributes to event capacity, availability, cancellation state and the historical relationship between a user and an event.
+
+The `bookings` application acts as the payment-workflow boundary. It creates Stripe Checkout Sessions, receives payment results and webhooks, and then creates or updates the `Booking` record owned by the event domain. Keeping one authoritative model avoids two competing representations of the same transaction while still separating event data from payment-provider workflow code.
 
 ## Relational Data Model
 
@@ -446,6 +450,12 @@ Authentication becomes necessary when a user attempts to book an event or manage
 
 The profile area then provides a single location where authenticated users can review and manage their bookings.
 
+## Validated Booking Form and Payment Integrity
+
+The customer-facing quantity input is represented by a Django `BookingForm`. When Checkout is requested, the posted data is bound to that form and must pass `is_valid()` before the cleaned quantity can be used to create a Stripe Checkout Session.
+
+The validated form deliberately does **not** call `form.save()` to create a paid booking immediately. Reaching Checkout is not evidence that payment succeeded, so the actual `Booking` record is created only after Stripe sends a verified successful-payment webhook. This preserves the benefit of Django form validation while preventing abandoned or unpaid Checkout Sessions from occupying capacity.
+
 ## Stripe Checkout and Webhook Confirmation
 
 Stripe Checkout was chosen so that payment-card handling is delegated to a specialist payment provider rather than being implemented directly within Event Horizon.
@@ -455,6 +465,8 @@ Reaching the Stripe checkout page is not treated as proof of payment. The applic
 This separation was intentional because a user can leave or cancel Checkout before completing payment. Creating the booking only after successful payment confirmation prevents incomplete checkouts from occupying event capacity.
 
 Additional payment safeguards were added during development to account for real-world failure conditions. These include duplicate webhook protection, asynchronous payment-success handling, retry-safe refunds, capacity and event-start checks after payment, preservation of the amount originally paid, graceful handling of external email or Stripe failures, automatic refunds when a paid booking can no longer be fulfilled and tracking when Stripe later reports a refund failure.
+
+Checkout failure paths also provide explicit user feedback. Stripe API/network failures return the user safely to the event page with an error message, while intentionally cancelled Checkout Sessions return with a message confirming that payment was cancelled and no booking was created.
 
 ## Capacity and Booking Status
 
@@ -471,6 +483,12 @@ Sold-out presentation in the interface is therefore driven by the same underlyin
 Django Admin is used for administrator-facing data management rather than recreating a separate custom administration system.
 
 This provides authenticated administrative CRUD functionality for the centrally owned event dataset while allowing development effort to focus on the customer-facing event discovery, booking and payment experience.
+
+## Error and Route Handling
+
+The production 404 handler distinguishes between two situations. A URL that matches no route at all is redirected to the homepage, providing a useful recovery path for mistyped navigation. A real application route that refers to a missing, inactive or unauthorized resource continues to return a genuine 404 response.
+
+This distinction is important because ownership and resource checks must not be weakened merely to provide a friendlier unknown-URL experience.
 
 ## Interface and Visual Rationale
 
@@ -936,38 +954,118 @@ Event Horizon is deployed using Heroku.
 
 **Live site:** [Event Horizon](https://event-horizon-msr-028f3aad28a4.herokuapp.com/)
 
-The current production deployment has been verified through the production acceptance tests documented in `TESTING.md`. **All 10 production acceptance checks pass**, including final S3 media verification.
+The current production deployment has been verified through the production acceptance tests documented in `TESTING.md`. **All 14 production acceptance checks pass**, including payment, accessibility, route-handling, deployment-check and S3 media verification.
 
-The application uses the Heroku Python buildpack and is deployed on the **Heroku-24 stack**.
+The application uses the Heroku Python buildpack and runs on the **Heroku-24 stack**. PostgreSQL provides the production relational database, Amazon S3 stores uploaded event media, Stripe handles payments and refunds, and Resend provides email delivery.
 
-The deployment process installs the dependencies listed in `requirements.txt` and runs Django's `collectstatic` command to prepare the application's static files.
+## Reproducing the Heroku Deployment
 
-External media storage is handled through Amazon S3 using `django-storages` and Boto3. This prevents uploaded event images from relying on Heroku's ephemeral application filesystem.
+The following steps describe the production deployment process without exposing any real credentials.
 
-## Deployment Configuration
+1. Clone the repository and enter the project directory:
 
-The project uses environment variables for sensitive configuration, including:
+```bash
+git clone https://github.com/MSR-Projects7274/event-horizon.git
+cd event-horizon
+```
 
-- Django secret key
-- Database URL
-- allowed hosts and trusted CSRF origins
-- production debug/security configuration
-- Stripe public key
-- Stripe secret key
-- Stripe webhook secret
-- Resend API key
-- AWS access credentials
-- AWS storage bucket configuration
+2. Log in to Heroku, create an application and ensure the Python buildpack is configured:
 
-These values are deliberately excluded from version control.
+```bash
+heroku login
+heroku create <app-name>
+heroku stack:set heroku-24 --app <app-name>
+heroku buildpacks:set heroku/python --app <app-name>
+```
 
-The project timezone is configured as `Europe/London`, allowing event start-time rules to follow GMT and British Summer Time automatically.
+3. Attach a Heroku PostgreSQL add-on using a currently available plan. Heroku supplies the resulting `DATABASE_URL` configuration variable automatically.
 
-## Static Files
+```bash
+heroku addons:create heroku-postgresql:<plan> --app <app-name>
+```
 
-Django's static files are collected during the Heroku build process. This includes the project's CSS, JavaScript and custom SVG favicon.
+4. Configure the required application settings. Actual secret values must never be committed to Git:
 
-The deployment initially encountered an issue where `collectstatic` failed because a required package was missing from the production dependencies. The dependency configuration was subsequently corrected so that the deployment environment contained the packages required by the application.
+```text
+SECRET_KEY
+DEBUG=False
+DATABASE_URL
+ALLOWED_HOSTS
+CSRF_TRUSTED_ORIGINS
+STRIPE_PUBLIC_KEY
+STRIPE_SECRET_KEY
+STRIPE_WH_SECRET
+RESEND_API_KEY
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_STORAGE_BUCKET_NAME
+AWS_S3_REGION_NAME
+```
+
+`ALLOWED_HOSTS` should contain the deployed hostname, while `CSRF_TRUSTED_ORIGINS` should contain its full HTTPS origin. The project timezone is configured in Django as `Europe/London` so event timing follows GMT/BST correctly.
+
+5. Prepare the S3 media service. Create the bucket, configure credentials with permission to access it, then provide the bucket name and region through the AWS environment variables above. Django uses `django-storages`/Boto3 for uploaded media, while application static files are handled separately through WhiteNoise.
+
+6. Configure the Stripe webhook endpoint to target the deployed application:
+
+```text
+https://<app-hostname>/bookings/wh/
+```
+
+The webhook must provide its signing secret through `STRIPE_WH_SECRET` and subscribe to the events used by Event Horizon:
+
+```text
+checkout.session.completed
+checkout.session.async_payment_succeeded
+refund.failed
+```
+
+7. Push the application to Heroku:
+
+```bash
+git push heroku main
+```
+
+During the build, Heroku installs the packages in `requirements.txt` and Django runs `collectstatic` for the project's CSS, JavaScript and favicon.
+
+8. Apply the database migrations:
+
+```bash
+heroku run -- python manage.py migrate
+```
+
+9. Create an administrator account if required:
+
+```bash
+heroku run -- python manage.py createsuperuser
+```
+
+10. Populate the event catalogue if deploying a fresh database. The project's management command can be used for the structured seed data, after which final event media can be uploaded through Django Admin so it is stored in S3:
+
+```bash
+heroku run -- python manage.py seed_events
+```
+
+11. Verify the deployed schema and Django production configuration:
+
+```bash
+heroku run -- python manage.py migrate --check
+heroku run -- python manage.py check --deploy
+```
+
+The final production verification reported **no pending migrations**. `check --deploy` reported only Django's optional `security.W004` HSTS warning; HSTS was not enabled solely to silence the warning because it should be introduced as a deliberate production policy. HTTPS itself is enforced by the application configuration and HTTP requests redirect to HTTPS.
+
+12. Complete browser acceptance testing against the live application, including authentication, search/filtering, Stripe test payment, cancellation/refund flow, media, keyboard navigation, reduced-motion behaviour and route/error handling. The completed results are documented in `TESTING.md`.
+
+## Static and Media Files
+
+Django's static files are collected during the Heroku build process. The custom stylesheet, JavaScript and SVG favicon are served through the configured static-file pipeline.
+
+Uploaded event media is stored externally in Amazon S3 rather than on Heroku's ephemeral filesystem. The final production catalogue contains 70 verified event images uploaded through Django Admin.
+
+## Deployment Issue Resolved During Development
+
+An earlier deployment failed during `collectstatic` because a required dependency was missing from the production dependency set. The dependency configuration was corrected so the build environment contained all packages required by the application, after which static collection and deployment completed successfully.
 
 </details>
 
@@ -977,22 +1075,28 @@ The deployment initially encountered an issue where `collectstatic` failed becau
 
 Event Horizon was designed with accessibility and responsive behaviour in mind.
 
-The interface uses clear headings, readable text, identifiable buttons and consistent navigation to help users understand the available actions.
+The interface uses clear headings, readable text, identifiable buttons and consistent navigation. The shared event-search input has an explicit accessible label, and global Django feedback is announced through an `aria-live="polite"` region so status messages are available to assistive technology as well as being visually styled.
 
-The layout adapts to different screen sizes, with particular attention given to:
+The layout adapts across desktop, tablet and mobile widths, with particular attention given to:
 
 - Mobile navigation
-- Event cards
+- Event cards and sold-out presentation
 - Event detail pages
 - Search controls
 - Authentication forms
 - Booking controls
 - Profile and booking pages
 - Spacing and alignment on smaller screens
+- Keyboard focus visibility
+- Reduced-motion preferences
 
-Interactive elements are presented as clear actions, while unavailable functionality such as sold-out bookings is visually differentiated from available actions.
+The homepage event ticker received additional keyboard treatment. When focus enters the ticker, the animation stops and the links are presented as a wrapped static list with a strong `:focus-visible` outline. This keeps every event link visible while tabbing rather than allowing keyboard focus to move through off-screen animated content.
 
-The site was tested across different viewport sizes during development to identify layout problems and ensure that important content remained accessible on smaller displays.
+The site also respects `prefers-reduced-motion`. When a user requests reduced motion, the scrolling ticker becomes static, special-event title animation is disabled, image-follow/parallax behaviour is removed and the cycling whisper effect is reduced to a single static message. Normal animation remains available when the operating-system preference allows it.
+
+The **Not For The Faint Of Heart** visual effects therefore remain part of the site's identity without making animation mandatory. Interactive elements remain available with motion disabled, and sold-out/unavailable actions are visually differentiated from available actions.
+
+Responsive, keyboard and reduced-motion behaviour were checked locally and then rechecked on the deployed Heroku application. Full evidence is recorded in `TESTING.md`.
 
 * * *
 
@@ -1236,19 +1340,45 @@ Wireframes and final screenshots provide the visual evidence for this progressio
 
 # Testing
 
-Event Horizon uses a combination of automated Django tests and manual browser-based testing.
+Event Horizon uses a combination of automated Django tests, test-driven feature work, manual browser testing and final standards validation.
 
-The automated test suite currently contains **76 passing tests** covering authentication, event discovery, booking behaviour, data-integrity constraints, event timing, Stripe Checkout, immediate and asynchronous webhook handling, refunds, failed-refund tracking, capacity management and user permissions.
+The latest full Django suite contains **80 passing tests**:
 
-Manual testing has also been carried out across the main user journeys, administrator functionality, form validation, error handling, responsive layouts, accessibility and final production media. **76/76 completed manual checks pass** across local and production testing.
+| App | Tests |
+|---|---:|
+| `home` | 5 |
+| `profiles` | 12 |
+| `events` | 30 |
+| `bookings` | 33 |
+| **Total** | **80** |
 
-The deployed Heroku application has completed its production acceptance pass with **10/10 production checks passing**. This includes HTTPS loading, navigation, authentication, search and filtering, Stripe test payment and webhook confirmation, booking cancellation and refund handling, capacity restoration, cancellation email delivery, static assets, production-safe 404 behaviour, responsive layouts and final S3-hosted event media.
+The suite covers authentication, event discovery, booking behaviour, form validation, data-integrity constraints, event timing, Stripe Checkout, immediate and asynchronous webhook handling, refunds, failed-refund tracking, capacity management, user permissions and route/error behaviour.
 
-Final code validation also passed. The Python codebase completed a project-wide Flake8 check with no findings, representative rendered pages passed the W3C Nu HTML Checker after the identified form-markup issues were corrected, the custom stylesheet passed W3C CSS validation with no errors, and the custom JavaScript passed JSHint with no errors or warnings.
+## Test-Driven Development Evidence
 
-The final media checks **G8** and **P7** now pass after all 70 event images were uploaded and verified on the deployed site. The category-filter active state and custom favicon were also verified after deployment. A final homepage timing correction was additionally verified locally and in production so same-day events no longer remain visible after their scheduled start time.
+The final robustness work included four deliberately test-first RED → GREEN cycles, each recorded as separate Git commits:
 
-Full testing procedures, results and discovered issues are documented separately:
+| Improvement | RED commit | GREEN commit |
+|---|---|---|
+| User feedback when Stripe Checkout Session creation fails | `0de00d7` | `ecd0e5d` |
+| Feedback when the user cancels Stripe Checkout | `1902d12` | `a9e8a72` |
+| Bind and validate `BookingForm` before creating Checkout | `6320d11` | `d52da26` |
+| Redirect an unmatched URL to the homepage | `69ba4a3` | `e7dcb51` |
+
+The fourth cycle exposed a wider regression when the full suite was run: genuine resource/ownership 404 responses were also being redirected. Commit `fac4ed6` corrected the handler so only Django `Resolver404` route misses redirect home while missing or unauthorized resources preserve their 404 response. The complete suite then passed **80/80**.
+
+This documents the TDD evidence accurately rather than implying that every earlier feature in the project was originally developed test-first.
+
+Manual testing now records **80/80 completed checks passing**, including **14/14 production acceptance checks**. The added production checks cover reduced-motion behaviour, keyboard access to the animated event ticker, explicit Stripe-cancellation feedback, the route/resource 404 distinction, and deployment/database verification.
+
+The final standards sweep also passes:
+
+- **Flake8:** no findings after two formatting-only corrections in `home/tests.py` and `home/views.py`
+- **W3C Nu HTML Checker:** final live homepage recheck completed with no errors or warnings; representative rendered pages had already passed the broader HTML validation pass
+- **W3C CSS Validation Service:** no errors after the final accessibility and feedback-message styling
+- **JSHint:** no errors or warnings after the reduced-motion JavaScript changes
+
+Full testing procedures, exact results, regression notes and production evidence are documented separately:
 
 **[View the complete testing documentation](TESTING.md)**
 
@@ -1372,19 +1502,31 @@ The homepage was expanded beyond a simple event listing to include featured even
 
 ### Booking System
 
-The booking process evolved into a full payment-confirmed workflow using Stripe Checkout and webhooks.
+The booking process evolved into a payment-confirmed workflow using Stripe Checkout and webhooks. The final checkout path binds and validates `BookingForm` before contacting Stripe, while the booking itself is still created only after verified payment confirmation.
+
+### Payment Feedback
+
+Stripe failure and cancellation paths were expanded so the user is not left guessing. Checkout API failures return to the event page with an error message, while a cancelled Stripe Checkout clearly states that payment was cancelled and no booking was created. Global Django messages were then given a consistent visual treatment so this feedback is prominent rather than appearing as unstyled text.
 
 ### Event Capacity
 
-Capacity management was expanded to provide dynamic availability and dedicated sold-out handling.
+Capacity management was expanded to provide dynamic availability, backend capacity checks and dedicated sold-out handling.
 
 ### Sold-Out Presentation
 
 Rather than simply preventing a booking when an event reached capacity, sold-out events were given a dedicated visual treatment so that their status was immediately clear to users.
 
+### Route and 404 Behaviour
+
+Final error-handling work introduced a distinction between unknown routes and missing application resources. A completely unmatched URL redirects to the homepage, while missing events and protected resources retain genuine 404 responses.
+
 ### Not For The Faint Of Heart
 
 The special category developed into a deliberate visual contrast to the standard Event Horizon interface, using subtle glitching and shifting effects.
+
+### Accessibility
+
+The final accessibility pass added an explicit search label, reduced-motion support for animated effects, a keyboard-safe static ticker state while focus is inside the event ticker, and polite live-region announcement of global feedback messages.
 
 ### Media Storage
 
