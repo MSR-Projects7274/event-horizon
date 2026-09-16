@@ -1346,15 +1346,15 @@ Wireframes and final screenshots provide the visual evidence for this progressio
 
 Event Horizon uses a combination of automated Django tests, test-driven feature work, manual browser testing and final standards validation.
 
-The latest full Django suite contains **80 passing tests**:
+The latest full Django suite contains **82 passing tests**:
 
 | App | Tests |
 |---|---:|
 | `home` | 5 |
-| `profiles` | 12 |
+| `profiles` | 14 |
 | `events` | 30 |
 | `bookings` | 33 |
-| **Total** | **80** |
+| **Total** | **82** |
 
 The suite covers authentication, event discovery, booking behaviour, form validation, data-integrity constraints, event timing, Stripe Checkout, immediate and asynchronous webhook handling, refunds, failed-refund tracking, capacity management, user permissions and route/error behaviour.
 

@@ -42,19 +42,19 @@ python manage.py test
 Latest verified full-suite result:
 
 ```text
-Ran 80 tests
+Ran 82 tests
 OK
 ```
 
-All **80 automated tests passed**.
+All **82 automated tests passed**.
 
 | App        | Tests | Areas Covered |
 | ---------- | ----: | ------------- |
 | `home`     | 5 | Home page rendering, active/upcoming event filtering, featured-event limits, About rendering and unmatched-route handling. |
-| `profiles` | 12 | Registration, required email validation, anonymous-only authentication access, protected profiles, booking ownership, profile updates, password changes and refund-state presentation. |
+| `profiles` | 14 | Registration, required email validation, anonymous-only authentication access, protected profiles, booking ownership, profile updates, password changes, refund-state presentation and cancellation-action visibility for started/upcoming events. |
 | `events`   | 30 | Model behaviour, capacity and price integrity, event timing including BST, protected relationships, admin restrictions, event discovery, sold-out behaviour, booking ownership, post-start booking/cancellation prevention, refunds and email-failure handling. |
 | `bookings` | 33 | Validated checkout forms, Stripe Checkout creation and failure feedback, cancellation feedback, quantities/capacity, preserved payment values, booking-confirmation states, webhook validation, asynchronous payment success, refund handling, missing-user/event recovery, duplicate/concurrent webhook protection and refund-failure tracking. |
-| **Total**  | **80** | **Core application, authentication, form validation, booking, payment, refund, webhook, failure recovery, timing, route handling and data integrity.** |
+| **Total**  | **82** | **Core application, authentication, form validation, booking, payment, refund, webhook, failure recovery, timing, route handling and data integrity.** |
 
 ## Automated Test Coverage
 
@@ -600,7 +600,7 @@ Current verified testing status:
 
 | Testing Area | Result |
 |---|---:|
-| Automated Django tests | **80/80 passed** |
+| Automated Django tests | **82/82 passed** |
 | Authentication manual tests | **9/9 passed** |
 | Navigation/search manual tests | **11/11 passed** |
 | Booking/capacity manual tests | **10/10 passed** |
@@ -618,4 +618,4 @@ Current verified testing status:
 
 Automated coverage includes successful application behaviour together with regression tests for payment-service failures, explicit checkout feedback, form binding/validation, email failures, refund retry safety, asynchronous payment completion, failed-refund tracking, event-start enforcement, British Summer Time handling, historical payment-value preservation, concurrent duplicate webhook delivery, database-level booking validation and the distinction between unmatched routes and missing/protected resources.
 
-The final full automated suite passed **80/80** after the route-handler regression correction. The later Flake8 fixes changed only blank-line formatting and did not alter Python behaviour. Final Python, HTML, CSS and JavaScript validation all pass, production migrations are current, and the expanded Heroku acceptance pass is **14/14**.
+The latest full automated suite passes **82/82**. The earlier route-handler regression correction brought the suite to **80/80**, and the later profile-cancellation visibility tests increased the current automated total to 82. The Flake8 fixes changed only blank-line formatting and did not alter Python behaviour. Final Python, HTML, CSS and JavaScript validation all pass, production migrations are current, and the expanded Heroku acceptance pass is **14/14**.
