@@ -960,6 +960,8 @@ The current production deployment has been verified through the production accep
 
 The application uses the Heroku Python buildpack and runs on the **Heroku-24 stack**. PostgreSQL provides the production relational database, Amazon S3 stores uploaded event media, Stripe handles payments and refunds, and Resend provides email delivery.
 
+> **Email delivery limitation:** Event Horizon currently uses Resend's `onboarding@resend.dev` sender because the project does not have a custom domain. Resend restricts this test sender to the email address associated with the Resend account, so production booking and cancellation emails cannot currently be delivered to arbitrary user addresses. Full external email delivery would require a verified custom domain to be configured with Resend. This limitation does not affect booking creation, payment processing or refunds, which continue to function independently of email delivery.
+
 ## Reproducing the Heroku Deployment
 
 The following steps describe the production deployment process without exposing any real credentials.
