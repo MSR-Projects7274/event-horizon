@@ -406,6 +406,8 @@ class CheckoutViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'bookings/booking_success.html')
         self.assertEqual(response.context['booking'], booking)
+        self.assertContains(response, '&#10003;')
+        self.assertNotContains(response, 'fas fa-check')
 
     def test_booking_success_does_not_show_another_users_booking(self):
         other_user = User.objects.create_user(
