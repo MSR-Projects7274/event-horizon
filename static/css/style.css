@@ -1442,7 +1442,8 @@ footer {
     opacity: 0.8;
 }
 
-.booking-refunded {
+.booking-refunded,
+.booking-action-status {
     display: inline-flex;
     align-items: center;
     padding: 0.6rem 1rem;

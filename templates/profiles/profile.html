@@ -143,12 +143,22 @@
 
                                 {% if booking.status != 'cancelled' %}
 
-                                    <a
-                                        href="{% url 'cancel_booking' booking.id %}"
-                                        class="cancel-button"
-                                    >
-                                        Cancel
-                                    </a>
+                                    {% if booking.event.has_started %}
+
+                                        <span class="booking-action-status">
+                                            Event Started
+                                        </span>
+
+                                    {% else %}
+
+                                        <a
+                                            href="{% url 'cancel_booking' booking.id %}"
+                                            class="cancel-button"
+                                        >
+                                            Cancel
+                                        </a>
+
+                                    {% endif %}
 
                                 {% else %}
 

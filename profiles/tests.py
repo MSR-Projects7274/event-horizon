@@ -166,6 +166,52 @@ class ProfileViewTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('EvenStrongerPass456!'))
 
+    def test_profile_hides_cancel_link_after_event_has_started(self):
+        started_event = Event.objects.create(
+            category=self.category,
+            name='Past Pottery Workshop',
+            description='A workshop that has already started.',
+            location='Studio',
+            date=timezone.localdate() - timedelta(days=1),
+            time=time(19, 0),
+            price=Decimal('25.00'),
+            capacity=20,
+        )
+        booking = Booking.objects.create(
+            user=self.user,
+            event=started_event,
+            quantity=1,
+            stripe_session_id='cs_started_event',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Event Started')
+        self.assertNotContains(
+            response,
+            reverse('cancel_booking', args=[booking.id]),
+        )
+
+    def test_profile_keeps_cancel_link_for_upcoming_event(self):
+        booking = Booking.objects.create(
+            user=self.user,
+            event=self.event,
+            quantity=1,
+            stripe_session_id='cs_upcoming_event',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse('cancel_booking', args=[booking.id]),
+        )
+        self.assertNotContains(response, 'Event Started')
+
     def test_profile_shows_refund_processing_when_refund_id_is_missing(self):
         Booking.objects.create(
             user=self.user,
