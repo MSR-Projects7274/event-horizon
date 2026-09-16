@@ -80,10 +80,18 @@ class CheckoutViewTests(TestCase):
 
         for quantity in ('0', '-1', 'not-a-number'):
             with self.subTest(quantity=quantity):
-                response = self.client.post(url, {'quantity': quantity})
-                self.assertRedirects(
+                response = self.client.post(
+                    url,
+                    {'quantity': quantity},
+                    follow=True,
+                )
+                self.assertEqual(
+                    response.redirect_chain,
+                    [(reverse('event_detail', args=[self.event.id]), 302)],
+                )
+                self.assertContains(
                     response,
-                    reverse('event_detail', args=[self.event.id]),
+                    'Please enter a valid number of places.',
                 )
 
         mock_create.assert_not_called()
@@ -132,11 +140,16 @@ class CheckoutViewTests(TestCase):
         response = self.client.post(
             reverse('create_checkout_session', args=[self.event.id]),
             {'quantity': 2},
+            follow=True,
         )
 
-        self.assertRedirects(
+        self.assertEqual(
+            response.redirect_chain,
+            [(reverse('event_detail', args=[self.event.id]), 302)],
+        )
+        self.assertContains(
             response,
-            reverse('event_detail', args=[self.event.id]),
+            'Only 1 place is currently available.',
         )
         mock_create.assert_not_called()
 
@@ -175,9 +188,17 @@ class CheckoutViewTests(TestCase):
         response = self.client.post(
             reverse('create_checkout_session', args=[self.event.id]),
             {'quantity': 1},
+            follow=True,
         )
 
-        self.assertRedirects(response, reverse('edit_profile'))
+        self.assertEqual(
+            response.redirect_chain,
+            [(reverse('edit_profile'), 302)],
+        )
+        self.assertContains(
+            response,
+            'Please add an email address to your profile before booking.',
+        )
         mock_create.assert_not_called()
 
     @patch('bookings.views.stripe.checkout.Session.create')

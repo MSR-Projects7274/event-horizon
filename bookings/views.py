@@ -38,6 +38,10 @@ def create_checkout_session(request, event_id):
     form = BookingForm(request.POST)
 
     if not form.is_valid():
+        messages.error(
+            request,
+            'Please enter a valid number of places.',
+        )
         return redirect(
             'event_detail',
             event_id=event.id,
@@ -46,12 +50,27 @@ def create_checkout_session(request, event_id):
     quantity = form.cleaned_data['quantity']
 
     if quantity > event.places_remaining:
+        if event.places_remaining == 1:
+            availability_message = 'Only 1 place is currently available.'
+        else:
+            availability_message = (
+                f'Only {event.places_remaining} places are currently available.'
+            )
+
+        messages.error(
+            request,
+            availability_message,
+        )
         return redirect(
             'event_detail',
             event_id=event.id,
         )
 
     if not request.user.email:
+        messages.error(
+            request,
+            'Please add an email address to your profile before booking.',
+        )
         return redirect('edit_profile')
 
     amount = int(
