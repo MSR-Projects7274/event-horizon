@@ -361,13 +361,15 @@ Event Horizon was developed using the following technologies:
 | Library | Purpose |
 |---|---|
 | **Django** | Core web framework |
-| **django-allauth** | User registration and authentication |
 | **django-storages** | Integration with external storage services |
 | **boto3** | Amazon S3 integration |
-| **django-summernote** | Rich text editing for event content |
 | **dj-database-url** | Database URL configuration |
 | **Stripe** | Payment processing and webhook integration |
-| **Requests** | HTTP requests |
+| **django-environ** | Environment variable configuration |
+| **WhiteNoise** | Production static-file serving |
+| **Gunicorn** | Production WSGI server |
+| **Pillow** | Image-field support |
+| **psycopg2-binary** | PostgreSQL database driver |
 
 </details>
 
@@ -1578,6 +1580,6 @@ The following resources and technologies were used during the development of Eve
 - Amazon Web Services documentation
 - Heroku documentation
 - GitHub documentation
-- Event Images: Images generated using Perchance.org
-- Bug fixes and advice: ChatGPT provided guidance, code extracts and troubleshooting support
-- Favicon: Custom SVG created specifically for Event Horizon by ChatGPT
+- Development support: ChatGPT provided guidance, code extracts and troubleshooting support throughout development.
+- Event seed generator: The initial concept and base code for `events/management/commands/seed_events.py` were created by the project author. ChatGPT was used to implement and expand the generator, including the event description generation, event-selection logic, description preview functionality and supporting command behaviour.
+- Favicon: Custom SVG created specifically for Event Horizon
