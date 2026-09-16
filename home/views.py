@@ -52,6 +52,7 @@ def about(request):
         'home/about.html',
     )
 
+
 def redirect_not_found(request, exception):
     """Redirect unknown URLs while preserving resource 404 responses."""
 

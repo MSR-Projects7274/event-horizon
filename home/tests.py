@@ -97,4 +97,3 @@ class HomeViewTests(TestCase):
             response,
             reverse('home'),
         )
-
