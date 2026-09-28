@@ -260,7 +260,7 @@ Each result below records:
 
 - the final status.
 
-A total of **80/80 manual checks pass** across local and production testing.
+A total of **81/81 manual checks pass** across local and production testing.
 
 ---
 
@@ -352,8 +352,9 @@ A total of **80/80 manual checks pass** across local and production testing.
 | E6 | Create/edit a category and assign an event. | Category saves and event appears under it. | Category assignment worked correctly. | Pass |
 | E7 | Open Bookings in Admin. | Booking records are visible with useful information. | Booking records displayed correctly. | Pass |
 | E8 | Create an event with required data missing. | Admin rejects the invalid event and shows validation errors. | Validation prevented the invalid save. | Pass |
+| E9 | Delete obsolete event records through Django Admin. | Selected event records are deleted successfully and are removed from the event catalogue. | Obsolete event records were successfully deleted through Django Admin during the catalogue update before the replacement events were added. | Pass |
 
-**Administrator functionality result: 8/8 passed.**
+**Administrator functionality result: 9/9 passed.**
 
 ---
 
@@ -605,7 +606,7 @@ Current verified testing status:
 | Navigation/search manual tests | **11/11 passed** |
 | Booking/capacity manual tests | **10/10 passed** |
 | Payment/cancellation manual tests | **10/10 passed** |
-| Administrator manual tests | **8/8 passed** |
+| Administrator manual tests | **9/9 passed** |
 | Validation/error-handling manual tests | **8/8 passed** |
 | Responsive/accessibility/static/media tests | **10/10 passed** |
 | Production deployment tests | **14/14 passed** |
@@ -614,7 +615,7 @@ Current verified testing status:
 | CSS / W3C validation | **Pass - no errors** |
 | JavaScript / JSHint validation | **Pass - no errors or warnings** |
 
-**Current completed manual testing: 80/80 passed.**
+**Current completed manual testing: 81/81 passed.**
 
 Automated coverage includes successful application behaviour together with regression tests for payment-service failures, explicit checkout feedback, form binding/validation, email failures, refund retry safety, asynchronous payment completion, failed-refund tracking, event-start enforcement, British Summer Time handling, historical payment-value preservation, concurrent duplicate webhook delivery, database-level booking validation and the distinction between unmatched routes and missing/protected resources.
 

@@ -214,6 +214,7 @@ Administrators can:
 
 - Create events
 - Edit existing events
+- Delete obsolete events where existing protected relationships do not prevent deletion
 - Manage event descriptions
 - Assign event categories
 - Set event dates and times
