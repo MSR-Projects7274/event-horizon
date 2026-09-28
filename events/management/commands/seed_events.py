@@ -3520,7 +3520,6 @@ THEME_DESCRIPTION_DATA = {
     },
 
 
-
     "evening_street_food_tour": {
         "category": "Food & Drink",
         "openings": [
