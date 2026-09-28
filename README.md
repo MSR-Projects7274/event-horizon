@@ -99,8 +99,6 @@ Administrators can manage the event catalogue, including creating and editing ev
 <details>
 <summary><strong>Click to expand features</strong></summary>
 
-<br>
-
 ## Homepage
 
 The homepage provides an introduction to Event Horizon and acts as the main starting point for discovering events.
