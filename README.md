@@ -487,7 +487,7 @@ This provides authenticated administrative CRUD functionality for the centrally 
 
 ## Error and Route Handling
 
-The production 404 handler distinguishes between two situations. A URL that matches no route at all is redirected to the homepage, providing a useful recovery path for mistyped navigation. A real application route that refers to a missing, inactive or unauthorized resource continues to return a genuine 404 response.
+The production 404 handler distinguishes between two situations. A URL that matches no route at all is redirected to the homepage, providing a useful recovery path for mistyped navigation. A real application route that refers to a missing, inactive or unauthorized resource continues to return a genuine HTTP 404 response using the custom Event Horizon 404 page, which provides a clear explanation and a Return Home action.
 
 This distinction is important because ownership and resource checks must not be weakened merely to provide a friendlier unknown-URL experience.
 
@@ -1561,7 +1561,7 @@ Rather than simply preventing a booking when an event reached capacity, sold-out
 
 ### Route and 404 Behaviour
 
-Final error-handling work introduced a distinction between unknown routes and missing application resources. A completely unmatched URL redirects to the homepage, while missing events and protected resources retain genuine 404 responses.
+Final error-handling work introduced a distinction between unknown routes and missing application resources. A completely unmatched URL redirects to the homepage, while missing events and protected resources retain genuine HTTP 404 responses. A custom Event Horizon 404 template was then added so these genuine 404 responses remain consistent with the site's visual design and provide users with a clear Return Home action.
 
 ### Not For The Faint Of Heart
 
