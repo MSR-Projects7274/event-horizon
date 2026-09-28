@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found | Event Horizon{% endblock %}
+
+{% block content %}
+
+<section class="about-page">
+    <div class="about-hero">
+
+        <p class="home-eyebrow">404</p>
+
+        <h1>Page Not Found</h1>
+
+        <p class="about-intro">
+            The page or resource you requested could not be found.
+            It may have been removed, become unavailable, or the address
+            may be incorrect.
+        </p>
+
+        <a href="{% url 'home' %}" class="event-view-button">
+            Return Home
+        </a>
+
+    </div>
+</section>
+
+{% endblock %}
