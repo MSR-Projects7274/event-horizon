@@ -39,9 +39,14 @@ class RegistrationTests(TestCase):
                 'password1': 'StrongPass123!',
                 'password2': 'StrongPass123!',
             },
+            follow=True,
         )
 
         self.assertRedirects(response, reverse('login'))
+        self.assertContains(
+            response,
+            'Account created successfully. You can now log in.'
+        )
         self.assertTrue(
             User.objects.filter(
                 username='newuser',
@@ -141,9 +146,11 @@ class ProfileViewTests(TestCase):
         response = self.client.post(
             reverse('edit_profile'),
             {'email': 'updated@example.com'},
+            follow=True,
         )
 
         self.assertRedirects(response, reverse('profile'))
+        self.assertContains(response, 'Profile updated successfully.')
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'updated@example.com')
 
@@ -157,9 +164,11 @@ class ProfileViewTests(TestCase):
                 'new_password1': 'EvenStrongerPass456!',
                 'new_password2': 'EvenStrongerPass456!',
             },
+            follow=True,
         )
 
         self.assertRedirects(response, reverse('profile'))
+        self.assertContains(response, 'Password changed successfully.')
         profile_response = self.client.get(reverse('profile'))
         self.assertEqual(profile_response.status_code, 200)
 

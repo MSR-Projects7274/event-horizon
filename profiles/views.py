@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
@@ -19,6 +20,10 @@ def register(request):
 
         if form.is_valid():
             form.save()
+            messages.success(
+                request,
+                'Account created successfully. You can now log in.'
+            )
             return redirect('login')
 
     else:
@@ -67,6 +72,10 @@ def edit_profile(request):
 
         if form.is_valid():
             form.save()
+            messages.success(
+                request,
+                'Profile updated successfully.'
+            )
 
             return redirect('profile')
 
@@ -100,6 +109,10 @@ def change_password(request):
             update_session_auth_hash(
                 request,
                 user
+            )
+            messages.success(
+                request,
+                'Password changed successfully.'
             )
 
             return redirect('profile')

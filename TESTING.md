@@ -66,11 +66,11 @@ The automated suite verifies behaviour including:
 * registration page access;
 * authenticated-user redirects away from login and registration;
 * required registration email validation;
-* valid user registration;
+* valid user registration with explicit success feedback;
 * protected profile access;
 * profile booking ownership;
-* profile email updates;
-* password changes while preserving the session;
+* profile email updates with explicit success feedback;
+* password changes while preserving the session and displaying explicit success feedback;
 * category and event string representations;
 * event start-time evaluation using the configured Europe/London timezone, including British Summer Time;
 * booked and remaining capacity calculations;
@@ -366,7 +366,7 @@ A total of **81/81 manual checks pass** across local and production testing.
 | F2 | Register using an existing username. | Registration is rejected with useful feedback. | Duplicate username was rejected. | Pass |
 | F3 | Register with mismatched passwords. | Account is not created and password validation appears. | Password mismatch was rejected correctly. | Pass |
 | F4 | Log in with an incorrect password. | Login is rejected and no authenticated session is created. | Invalid login was rejected. | Pass |
-| F5 | Edit the profile with a valid new email. | Email saves and success feedback appears. | Profile email updated correctly. | Pass |
+| F5 | Edit the profile with a valid new email. | Email saves and success feedback appears. | Profile email updated correctly and success feedback was displayed. | Pass |
 | F6 | Open a nonexistent event URL. | A 404 response is returned rather than a server error. | Django's development 404 page was returned while running locally with debug enabled. | Pass |
 | F7 | Open another user's booking cancellation URL. | Access is denied without exposing the booking. | A 404 response was returned. | Pass |
 | F8 | Perform an action that displays normal success/error feedback. | Feedback is visible and understandable. | Global Django feedback displayed in the shared styled message component and remained clearly readable. | Pass |
