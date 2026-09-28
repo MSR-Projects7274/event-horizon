@@ -53,7 +53,7 @@ All **82 automated tests passed**.
 | `home`     | 5 | Home page rendering, active/upcoming event filtering, featured-event limits, About rendering and unmatched-route handling. |
 | `profiles` | 14 | Registration, required email validation, anonymous-only authentication access, protected profiles, booking ownership, profile updates, password changes, refund-state presentation and cancellation-action visibility for started/upcoming events. |
 | `events`   | 30 | Model behaviour, capacity and price integrity, event timing including BST, protected relationships, admin restrictions, event discovery, sold-out behaviour, booking ownership, post-start booking/cancellation prevention, refunds and email-failure handling. |
-| `bookings` | 33 | Validated checkout forms, Stripe Checkout creation and failure feedback, cancellation feedback, quantities/capacity, preserved payment values, booking-confirmation states, webhook validation, asynchronous payment success, refund handling, missing-user/event recovery, duplicate/concurrent webhook protection and refund-failure tracking. |
+| `bookings` | 33 | Validated checkout forms, Stripe Checkout creation and failure feedback, cancellation feedback, quantities/capacity, preserved payment values, booking-confirmation states, webhook validation, asynchronous payment success, refund handling, durable unfulfillable-payment resolution, missing-user/event recovery, duplicate/concurrent webhook protection and refund-failure tracking. |
 | **Total**  | **82** | **Core application, authentication, form validation, booking, payment, refund, webhook, failure recovery, timing, route handling and data integrity.** |
 
 ## Automated Test Coverage
@@ -107,7 +107,7 @@ The automated suite verifies behaviour including:
 * booking-success session requirements;
 * booking-confirmation ownership;
 * delayed webhook handling after a successful Stripe redirect;
-* separate confirmed, refund-requested, refund-processing and refund-failed presentation states;
+* separate confirmed, delayed-processing, refund-requested, refund-processing and refund-failed presentation states, including paid sessions that cannot become bookings;
 * malformed Stripe webhook payloads;
 * invalid Stripe webhook signatures;
 * ignored unrelated webhook event types;
@@ -122,8 +122,8 @@ The automated suite verifies behaviour including:
 * automatic refunds when capacity becomes unavailable after payment;
 * retry-safe refunds when an automatic capacity refund temporarily fails;
 * automatic refunds when the booking user no longer exists;
-* automatic refunds when the referenced event becomes unavailable or has already started;
-* recording of Stripe `refund.failed` events against the affected booking;
+* automatic refunds when the referenced event becomes unavailable or has already started, with durable Checkout resolution state preserved before the refund attempt;
+* recording of Stripe `refund.failed` events against the affected booking or exceptional Checkout resolution;
 * user-facing failed-refund status presentation;
 * confirmation email triggering only for successfully fulfilled bookings;
 * unmatched URL routes redirecting to the homepage with `DEBUG=False`;

@@ -14,11 +14,18 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
+from bookings.models import CheckoutResolution
 from events.models import Booking, Event
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+RESOLUTION_REFUND_PREFIXES = {
+    'missing_user': 'missing-user-refund',
+    'unavailable_event': 'unavailable-event-refund',
+    'started_event': 'started-event-refund',
+}
 
 
 def refund_unfulfillable_booking(booking, payment_intent):
@@ -51,11 +58,30 @@ def refund_unfulfillable_payment(
     session_id,
     payment_intent,
     idempotency_prefix,
+    *,
+    reason,
+    user=None,
+    event=None,
 ):
-    """Refund a paid session that cannot be fulfilled."""
+    """Record and refund a paid session that cannot become a booking."""
+
+    resolution, _ = CheckoutResolution.objects.update_or_create(
+        stripe_session_id=session_id,
+        defaults={
+            'user': user,
+            'event': event,
+            'reason': reason,
+        },
+    )
+
+    if resolution.stripe_refund_id:
+        return True
+
+    if not payment_intent:
+        return False
 
     try:
-        stripe.Refund.create(
+        refund = stripe.Refund.create(
             payment_intent=payment_intent,
             idempotency_key=(
                 f'{idempotency_prefix}-{session_id}'
@@ -63,6 +89,21 @@ def refund_unfulfillable_payment(
         )
     except stripe.error.StripeError:
         return False
+
+    refund_id = getattr(refund, 'id', None)
+
+    if not refund_id:
+        return False
+
+    resolution.stripe_refund_id = refund_id
+    resolution.refund_status = getattr(refund, 'status', None)
+    resolution.save(
+        update_fields=[
+            'stripe_refund_id',
+            'refund_status',
+            'updated_at',
+        ]
+    )
 
     return True
 
@@ -101,6 +142,12 @@ def stripe_webhook(request):
             return HttpResponse(status=400)
 
         Booking.objects.filter(
+            stripe_refund_id=refund_id,
+        ).update(
+            refund_status='failed',
+        )
+
+        CheckoutResolution.objects.filter(
             stripe_refund_id=refund_id,
         ).update(
             refund_status='failed',
@@ -156,23 +203,62 @@ def stripe_webhook(request):
 
     total_paid = Decimal(amount_total) / Decimal('100')
 
-    # Make sure the booking user still exists
+    # A previous attempt may already have decided this paid session cannot
+    # become a booking. Keep retrying that refund path rather than allowing a
+    # later webhook to create a booking if the event state changes.
 
-    try:
-        user_exists = User.objects.filter(
-            pk=user_id,
-        ).exists()
-    except (TypeError, ValueError):
-        return HttpResponse(status=400)
+    existing_resolution = CheckoutResolution.objects.select_related(
+        'user',
+        'event',
+    ).filter(
+        stripe_session_id=session_id,
+    ).first()
 
-    if not user_exists:
-        if not payment_intent:
+    if existing_resolution:
+        idempotency_prefix = RESOLUTION_REFUND_PREFIXES.get(
+            existing_resolution.reason
+        )
+
+        if not idempotency_prefix:
             return HttpResponse(status=500)
 
         if refund_unfulfillable_payment(
             session_id,
             payment_intent,
+            idempotency_prefix,
+            reason=existing_resolution.reason,
+            user=existing_resolution.user,
+            event=existing_resolution.event,
+        ):
+            return HttpResponse(status=200)
+
+        return HttpResponse(status=500)
+
+    # Make sure the booking user still exists
+
+    try:
+        user = User.objects.filter(
+            pk=user_id,
+        ).first()
+    except (TypeError, ValueError):
+        return HttpResponse(status=400)
+
+    if user is None:
+        event_for_resolution = None
+
+        try:
+            event_for_resolution = Event.objects.filter(
+                pk=event_id,
+            ).first()
+        except (TypeError, ValueError):
+            pass
+
+        if refund_unfulfillable_payment(
+            session_id,
+            payment_intent,
             'missing-user-refund',
+            reason='missing_user',
+            event=event_for_resolution,
         ):
             return HttpResponse(status=200)
 
@@ -246,14 +332,23 @@ def stripe_webhook(request):
 
                 booking = None
 
-    except Event.DoesNotExist:
-        if not payment_intent:
-            return HttpResponse(status=500)
+    except (Event.DoesNotExist, TypeError, ValueError):
+        unavailable_event = None
+
+        try:
+            unavailable_event = Event.objects.filter(
+                pk=event_id,
+            ).first()
+        except (TypeError, ValueError):
+            pass
 
         if refund_unfulfillable_payment(
             session_id,
             payment_intent,
             'unavailable-event-refund',
+            reason='unavailable_event',
+            user=user,
+            event=unavailable_event,
         ):
             return HttpResponse(status=200)
 
@@ -281,13 +376,13 @@ def stripe_webhook(request):
     # Refund if the event started before payment completed
 
     if event_started:
-        if not payment_intent:
-            return HttpResponse(status=500)
-
         if refund_unfulfillable_payment(
             session_id,
             payment_intent,
             'started-event-refund',
+            reason='started_event',
+            user=user,
+            event=event,
         ):
             return HttpResponse(status=200)
 

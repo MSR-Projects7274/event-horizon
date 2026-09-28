@@ -7,6 +7,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
+from bookings.models import CheckoutResolution
 from events.forms import BookingForm
 from events.models import Booking, Event
 
@@ -147,9 +148,19 @@ def booking_success(request):
         stripe_session_id=session_id,
     ).first()
 
+    payment_resolution = None
+
     if booking is not None:
         if booking.user_id != request.user.id:
             raise Http404
+    else:
+        payment_resolution = CheckoutResolution.objects.filter(
+            stripe_session_id=session_id,
+        ).first()
+
+        if payment_resolution is not None:
+            if payment_resolution.user_id != request.user.id:
+                raise Http404
 
     confirmed_booking = None
     cancelled_booking = None
@@ -166,6 +177,7 @@ def booking_success(request):
         {
             'booking': confirmed_booking,
             'cancelled_booking': cancelled_booking,
+            'payment_resolution': payment_resolution,
             'session_id': session_id,
         }
     )

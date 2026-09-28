@@ -383,7 +383,7 @@ The main areas of the project include:
   Owns the core event domain data and related business rules. The `Category`, `Event` and `Booking` models are defined here because booking records directly affect event capacity, availability, cancellation state and historical event relationships.
 
 - **Bookings**  
-  Owns the payment workflow around those booking records, including Stripe Checkout Session creation, payment-return handling and Stripe webhook processing. The app intentionally does not define a second `Booking` model.
+  Owns the payment workflow around those booking records, including Stripe Checkout Session creation, payment-return handling and Stripe webhook processing. The app defines `CheckoutResolution` only for paid Checkout Sessions that cannot legally become a `Booking`, avoiding a second competing booking model while preserving terminal refund state.
 
 - **Profiles / User functionality**  
   Responsible for account-related functionality and presenting a user's booking information.
@@ -419,7 +419,7 @@ This separation was chosen so that each application has a clear responsibility:
 
 * `home` handles the homepage, high-level event discovery and the unknown-route redirect behaviour;
 * `events` owns the event-domain data, event presentation, availability, booking records and cancellation behaviour;
-* `bookings` handles Stripe Checkout, payment confirmation and webhook fulfilment;
+* `bookings` handles Stripe Checkout, payment confirmation and webhook fulfilment, including terminal payment/refund state when no booking can be created;
 * `profiles` manages account-related functionality and presents a user's booking information.
 
 Separating these areas reduces unrelated logic inside each application and makes individual features easier to understand, test and maintain. The main `event_horizon` project contains configuration that applies across the whole application, including settings and top-level URL routing.
@@ -428,7 +428,7 @@ Separating these areas reduces unrelated logic inside each application and makes
 
 The `Booking` model remains in the `events` application rather than being duplicated or moved into `bookings`. This is intentional: a booking is part of the event domain because it directly contributes to event capacity, availability, cancellation state and the historical relationship between a user and an event.
 
-The `bookings` application acts as the payment-workflow boundary. It creates Stripe Checkout Sessions, receives payment results and webhooks, and then creates or updates the `Booking` record owned by the event domain. Keeping one authoritative model avoids two competing representations of the same transaction while still separating event data from payment-provider workflow code.
+The `bookings` application acts as the payment-workflow boundary. It creates Stripe Checkout Sessions, receives payment results and webhooks, and then creates or updates the `Booking` record owned by the event domain. When a paid Checkout Session cannot become a booking because the user or event is no longer available, or because the event has already started, the app stores a lightweight `CheckoutResolution` instead. This preserves the refund outcome without inventing a false booking record. Keeping one authoritative `Booking` model therefore avoids two competing representations of the event-domain transaction while still allowing payment-provider state to be recorded safely.
 
 ## Relational Data Model
 
@@ -436,7 +436,7 @@ A relational structure was chosen because the core data is naturally connected.
 
 Categories contain multiple events, events can have multiple bookings, and each booking belongs to both an event and an authenticated user.
 
-The `Booking` model acts as the link between a user and an event while also storing transaction-related information such as quantity, booking status, Stripe session information, the amount originally paid and refund information.
+The `Booking` model acts as the link between a user and an event while also storing transaction-related information such as quantity, booking status, Stripe session information, the amount originally paid and refund information. `CheckoutResolution` records the smaller set of Stripe/refund data required when a paid session cannot become a booking at all.
 
 Availability is calculated from the event's capacity and its confirmed bookings rather than being stored as a second independent value. This reduces the risk of two different availability values becoming inconsistent.
 
@@ -464,7 +464,7 @@ Reaching the Stripe checkout page is not treated as proof of payment. The applic
 
 This separation was intentional because a user can leave or cancel Checkout before completing payment. Creating the booking only after successful payment confirmation prevents incomplete checkouts from occupying event capacity.
 
-Additional payment safeguards were added during development to account for real-world failure conditions. These include duplicate webhook protection, asynchronous payment-success handling, retry-safe refunds, capacity and event-start checks after payment, preservation of the amount originally paid, graceful handling of external email or Stripe failures, automatic refunds when a paid booking can no longer be fulfilled and tracking when Stripe later reports a refund failure.
+Additional payment safeguards were added during development to account for real-world failure conditions. These include duplicate webhook protection, asynchronous payment-success handling, retry-safe refunds, capacity and event-start checks after payment, preservation of the amount originally paid, graceful handling of external email or Stripe failures, automatic refunds when a paid booking can no longer be fulfilled and tracking when Stripe later reports a refund failure. Paid sessions that cannot legally become a `Booking` are recorded as `CheckoutResolution` records so the success page can show a terminal refund state instead of remaining indefinitely in the processing state.
 
 Checkout failure paths also provide explicit user feedback. Stripe API/network failures return the user safely to the event page with an error message, while intentionally cancelled Checkout Sessions return with a message confirming that payment was cancelled and no booking was created.
 
@@ -599,7 +599,7 @@ The booking flow crosses both the frontend and several backend components.
 8. The webhook validates the paid state, event availability, event start time and remaining capacity before creating the booking.
 9. The amount charged by Stripe is stored on the booking so later event-price changes do not alter historical payment information.
 10. The browser returns to the booking-success flow.
-11. The success template displays the confirmed booking, a processing state if webhook completion is delayed, or the appropriate refund-processing state if the booking could not be fulfilled.
+11. The success template displays the confirmed booking, a processing state if webhook completion is delayed, or the appropriate refund/refund-failure state if the paid session could not be fulfilled.
 
 The Stripe webhook, rather than the browser redirect, is therefore the authoritative backend confirmation that payment succeeded.
 
@@ -613,7 +613,7 @@ Django verifies booking ownership and confirms that the event has not already st
 
 After Stripe accepts the refund request, the backend records the refund identifier and marks the booking as cancelled. Because availability is calculated using confirmed bookings only, the cancelled places automatically become available again.
 
-Stripe can report a refund failure later through `refund.failed`. Event Horizon records that failure against the booking so the profile can display `Refund Failed` rather than continuing to imply that the refund is progressing normally.
+Stripe can report a refund failure later through `refund.failed`. Event Horizon records that failure against either the affected booking or the associated `CheckoutResolution`, allowing the interface to report the failed refund instead of continuing to imply that it is progressing normally.
 
 The user is then redirected to their profile, where the latest database state is reflected in the interface.
 
@@ -669,7 +669,7 @@ The final implementation maintains a clear division between the main layers:
 
 | Layer                 | Responsibility                                                                                 |
 | --------------------- | ---------------------------------------------------------------------------------------------- |
-| **Models / Database** | Persistent event, category, booking and user-related data, relationships and data rules        |
+| **Models / Database** | Persistent event, category, booking, exceptional checkout-resolution and user-related data, relationships and data rules |
 | **Views**             | Request handling, queries, permissions, validation, business decisions and context preparation |
 | **Forms**             | User-input validation where form-based input is required                                       |
 | **Templates**         | Presentation of backend-prepared data                                                          |
@@ -686,9 +686,9 @@ This separation allows the frontend to remain focused on user interaction while 
 
 # Database Schema
 
-Event Horizon uses Django's relational database system to store users, event categories, events and customer bookings.
+Event Horizon uses Django's relational database system to store users, event categories, events, customer bookings and exceptional paid-checkout refund outcomes.
 
-The project uses Django's built-in `User` model for authentication rather than defining a custom user model. Application-specific data is stored using the `Category`, `Event` and `Booking` models.
+The project uses Django's built-in `User` model for authentication rather than defining a custom user model. Application-specific data is stored using the `Category`, `Event`, `Booking` and `CheckoutResolution` models.
 
 ## Entity Relationship Diagram
 
@@ -697,6 +697,8 @@ erDiagram
     USER ||--o{ BOOKING : makes
     CATEGORY ||--o{ EVENT : contains
     EVENT ||--o{ BOOKING : receives
+    USER o|--o{ CHECKOUT_RESOLUTION : associated_with
+    EVENT o|--o{ CHECKOUT_RESOLUTION : associated_with
 
     USER {
         bigint id PK
@@ -744,6 +746,18 @@ erDiagram
         string refund_status
         datetime cancelled_at
         datetime created_at
+    }
+
+    CHECKOUT_RESOLUTION {
+        bigint id PK
+        bigint user_id FK
+        bigint event_id FK
+        string stripe_session_id
+        string stripe_refund_id
+        string reason
+        string refund_status
+        datetime created_at
+        datetime updated_at
     }
 ```
 
@@ -872,15 +886,41 @@ The user relationship uses cascading deletion, so deleting a user also deletes t
 
 The event relationship uses `on_delete=models.PROTECT`, preventing an event with booking history from being deleted and preserving the integrity of existing transaction records.
 
+## CheckoutResolution
+
+The `CheckoutResolution` model stores the terminal payment/refund state for a paid Stripe Checkout Session that cannot legally become a `Booking`. This avoids creating a misleading booking record simply to retain payment history.
+
+| Field               | Type                       | Purpose                                                                                                      |
+| ------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `id`                | `BigAutoField`             | Primary key.                                                                                                 |
+| `user`              | `ForeignKey(User)`         | Optional user associated with the Checkout Session. It becomes `NULL` if that user no longer exists.        |
+| `event`             | `ForeignKey(Event)`        | Optional event associated with the Checkout Session. It becomes `NULL` if that event no longer exists.      |
+| `stripe_session_id` | `CharField(255)`           | Unique Stripe Checkout Session identifier used to keep retry handling idempotent.                            |
+| `stripe_refund_id`  | `CharField(255)`           | Optional unique Stripe refund identifier recorded after Stripe accepts the automatic refund request.        |
+| `reason`            | `CharField(30)`            | Why the paid Checkout could not become a booking: missing user, unavailable event or event already started. |
+| `refund_status`     | `CharField(20)`            | Optional Stripe refund lifecycle state, including a later `refund.failed` result.                            |
+| `created_at`        | `DateTimeField`            | Timestamp recorded when the resolution is first created.                                                     |
+| `updated_at`        | `DateTimeField`            | Timestamp updated when the stored refund state changes.                                                      |
+
+### Model Behaviour
+
+A `CheckoutResolution` is created before an automatic refund is attempted for an otherwise-unfulfillable paid Checkout Session. If Stripe temporarily fails, the same record remains in place and the webhook retry continues down the refund path rather than later creating a booking because the event state changed.
+
+Once Stripe accepts the refund, the refund ID is stored. If Stripe later sends `refund.failed`, the matching resolution is updated to `failed`, allowing the booking-success page to show a terminal failure message rather than remaining indefinitely in a generic processing state.
+
+The optional `user` and `event` relationships use `SET_NULL`. This preserves the payment-resolution audit record even if the related account or event no longer exists.
+
 ## Relationship Summary
 
-| Parent     | Child     | Relationship |
-| ---------- | --------- | ------------ |
-| `User`     | `Booking` | One-to-many  |
-| `Category` | `Event`   | One-to-many  |
-| `Event`    | `Booking` | One-to-many  |
+| Parent     | Child                 | Relationship |
+| ---------- | --------------------- | ------------ |
+| `User`     | `Booking`             | One-to-many  |
+| `Category` | `Event`               | One-to-many  |
+| `Event`    | `Booking`             | One-to-many  |
+| `User`     | `CheckoutResolution`  | Optional one-to-many |
+| `Event`    | `CheckoutResolution`  | Optional one-to-many |
 
-This structure avoids duplicating user and event information inside booking records. Bookings reference the existing user and event through foreign keys, allowing the application to retrieve related information using Django's ORM.
+This structure avoids duplicating user and event information inside booking records. Bookings reference the existing user and event through foreign keys, while exceptional paid-checkout outcomes retain optional links to those same records rather than copying their data.
 
 * * *
 
@@ -1354,7 +1394,7 @@ The latest full Django suite contains **82 passing tests**:
 | `bookings` | 33 |
 | **Total** | **82** |
 
-The suite covers authentication, event discovery, booking behaviour, form validation, data-integrity constraints, event timing, Stripe Checkout, immediate and asynchronous webhook handling, refunds, failed-refund tracking, capacity management, user permissions and route/error behaviour.
+The suite covers authentication, event discovery, booking behaviour, form validation, data-integrity constraints, event timing, Stripe Checkout, immediate and asynchronous webhook handling, refunds, durable unfulfillable-payment resolution, failed-refund tracking, capacity management, user permissions and route/error behaviour.
 
 ## Test-Driven Development Evidence
 

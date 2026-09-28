@@ -5,6 +5,8 @@
         Booking Confirmed | Event Horizon
     {% elif cancelled_booking %}
         Booking Cancelled | Event Horizon
+    {% elif payment_resolution %}
+        Booking Not Completed | Event Horizon
     {% else %}
         Booking Processing | Event Horizon
     {% endif %}
@@ -132,6 +134,88 @@
             <p class="booking-reference">
                 Booking reference:
                 <strong>{{ cancelled_booking.stripe_session_id }}</strong>
+            </p>
+
+            <div class="booking-success-actions">
+
+                <a
+                    href="{% url 'profile' %}"
+                    class="btn btn-primary"
+                >
+                    View My Bookings
+                </a>
+
+                <a
+                    href="{% url 'event_list' %}"
+                    class="btn btn-secondary"
+                >
+                    Explore More Events
+                </a>
+
+            </div>
+
+        {% elif payment_resolution %}
+
+            <p class="event-category">
+                Booking Not Completed
+            </p>
+
+            <h1>Your booking could not be completed</h1>
+
+            {% if payment_resolution.reason == 'started_event' %}
+
+                <p class="booking-success-intro">
+                    Your payment was received, but the event had already
+                    started before payment completed.
+                </p>
+
+            {% elif payment_resolution.reason == 'unavailable_event' %}
+
+                <p class="booking-success-intro">
+                    Your payment was received, but the event was no longer
+                    available when payment completed.
+                </p>
+
+            {% else %}
+
+                <p class="booking-success-intro">
+                    Your payment was received, but the booking could not be
+                    completed.
+                </p>
+
+            {% endif %}
+
+            {% if payment_resolution.refund_status == 'failed' %}
+
+                <p>
+                    There was a problem completing the automatic refund.
+                    Please contact the site administrator and quote the payment
+                    reference below.
+                </p>
+
+            {% elif payment_resolution.refund_status == 'succeeded' %}
+
+                <p>
+                    Your payment has been refunded automatically.
+                </p>
+
+            {% elif payment_resolution.stripe_refund_id %}
+
+                <p>
+                    A refund has been requested automatically.
+                </p>
+
+            {% else %}
+
+                <p>
+                    Your refund is still being processed automatically.
+                </p>
+
+            {% endif %}
+
+            <p class="booking-reference">
+                Payment reference:
+                <strong>{{ payment_resolution.stripe_session_id }}</strong>
             </p>
 
             <div class="booking-success-actions">

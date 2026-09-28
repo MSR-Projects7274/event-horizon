@@ -11,6 +11,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from bookings.models import CheckoutResolution
 from events.models import Booking, Category, Event
 
 
@@ -430,6 +431,21 @@ class CheckoutViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+        resolution = CheckoutResolution.objects.create(
+            user=other_user,
+            event=self.event,
+            stripe_session_id='cs_other_resolution',
+            stripe_refund_id='re_other_resolution',
+            reason='unavailable_event',
+        )
+
+        response = self.client.get(
+            reverse('booking_success'),
+            {'session_id': resolution.stripe_session_id},
+        )
+
+        self.assertEqual(response.status_code, 404)
+
 
 class WebhookTests(TestCase):
     """Tests for Stripe webhook validation, capacity and idempotency."""
@@ -587,6 +603,18 @@ class WebhookTests(TestCase):
             ).exists()
         )
 
+        resolution = CheckoutResolution.objects.get(
+            stripe_session_id='cs_missing_user'
+        )
+
+        self.assertIsNone(resolution.user)
+        self.assertEqual(resolution.event, self.event)
+        self.assertEqual(resolution.reason, 'missing_user')
+        self.assertEqual(
+            resolution.stripe_refund_id,
+            're_missing_user',
+        )
+
         mock_refund.assert_called_once_with(
             payment_intent='pi_webhook',
             idempotency_key='missing-user-refund-cs_missing_user',
@@ -608,18 +636,21 @@ class WebhookTests(TestCase):
 
         mock_construct_event.return_value = self.stripe_event(session)
 
-        mock_refund.return_value = SimpleNamespace(
-            id='re_unavailable_event'
-        )
+        mock_refund.side_effect = [
+            stripe.error.APIConnectionError(
+                'Temporary Stripe failure'
+            ),
+            SimpleNamespace(id='re_unavailable_event'),
+        ]
 
-        response = self.client.post(
+        first_response = self.client.post(
             self.webhook_url,
             data='{}',
             content_type='application/json',
             HTTP_STRIPE_SIGNATURE='test-signature',
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(first_response.status_code, 500)
 
         self.assertFalse(
             Booking.objects.filter(
@@ -627,12 +658,82 @@ class WebhookTests(TestCase):
             ).exists()
         )
 
-        mock_refund.assert_called_once_with(
-            payment_intent='pi_webhook',
-            idempotency_key=(
+        resolution = CheckoutResolution.objects.get(
+            stripe_session_id='cs_unavailable_event'
+        )
+
+        self.assertEqual(resolution.user, self.user)
+        self.assertEqual(resolution.event, self.event)
+        self.assertEqual(resolution.reason, 'unavailable_event')
+        self.assertIsNone(resolution.stripe_refund_id)
+
+        self.client.force_login(self.user)
+        processing_response = self.client.get(
+            reverse('booking_success'),
+            {'session_id': 'cs_unavailable_event'},
+        )
+
+        self.assertContains(
+            processing_response,
+            'the event was no longer',
+        )
+        self.assertContains(
+            processing_response,
+            'available when payment completed.',
+        )
+        self.assertContains(
+            processing_response,
+            'Your refund is still being processed automatically.',
+        )
+        self.assertNotContains(
+            processing_response,
+            "We're finalising your booking",
+        )
+
+        self.event.active = True
+        self.event.save(update_fields=['active'])
+
+        second_response = self.client.post(
+            self.webhook_url,
+            data='{}',
+            content_type='application/json',
+            HTTP_STRIPE_SIGNATURE='test-signature',
+        )
+
+        self.assertEqual(second_response.status_code, 200)
+        self.assertFalse(
+            Booking.objects.filter(
+                stripe_session_id='cs_unavailable_event'
+            ).exists()
+        )
+
+        resolution.refresh_from_db()
+
+        self.assertEqual(
+            resolution.stripe_refund_id,
+            're_unavailable_event',
+        )
+
+        refunded_response = self.client.get(
+            reverse('booking_success'),
+            {'session_id': 'cs_unavailable_event'},
+        )
+
+        self.assertContains(
+            refunded_response,
+            'A refund has been requested automatically.',
+        )
+
+        expected_call = {
+            'payment_intent': 'pi_webhook',
+            'idempotency_key': (
                 'unavailable-event-refund-cs_unavailable_event'
             ),
-        )
+        }
+
+        self.assertEqual(mock_refund.call_count, 2)
+        self.assertEqual(mock_refund.call_args_list[0].kwargs, expected_call)
+        self.assertEqual(mock_refund.call_args_list[1].kwargs, expected_call)
 
     @patch('bookings.webhook.stripe.Refund.create')
     @patch('bookings.webhook.stripe.Webhook.construct_event')
@@ -667,6 +768,41 @@ class WebhookTests(TestCase):
             Booking.objects.filter(
                 stripe_session_id='cs_started_event'
             ).exists()
+        )
+
+        resolution = CheckoutResolution.objects.get(
+            stripe_session_id='cs_started_event'
+        )
+
+        self.assertEqual(resolution.user, self.user)
+        self.assertEqual(resolution.event, self.event)
+        self.assertEqual(resolution.reason, 'started_event')
+        self.assertEqual(
+            resolution.stripe_refund_id,
+            're_started_event',
+        )
+
+        self.client.force_login(self.user)
+        success_response = self.client.get(
+            reverse('booking_success'),
+            {'session_id': 'cs_started_event'},
+        )
+
+        self.assertContains(
+            success_response,
+            'the event had already',
+        )
+        self.assertContains(
+            success_response,
+            'started before payment completed.',
+        )
+        self.assertContains(
+            success_response,
+            'A refund has been requested automatically.',
+        )
+        self.assertNotContains(
+            success_response,
+            "We're finalising your booking",
         )
 
         mock_refund.assert_called_once_with(
@@ -745,7 +881,7 @@ class WebhookTests(TestCase):
         self.assertEqual(mock_refund.call_count, 2)
 
     @patch('bookings.webhook.stripe.Webhook.construct_event')
-    def test_refund_failed_marks_booking_refund_status_failed(
+    def test_refund_failed_marks_local_refund_status_failed(
         self,
         mock_construct_event,
     ):
@@ -756,6 +892,14 @@ class WebhookTests(TestCase):
             stripe_session_id='cs_failed_refund',
             status='cancelled',
             stripe_refund_id='re_failed_refund',
+        )
+
+        resolution = CheckoutResolution.objects.create(
+            user=self.user,
+            event=self.event,
+            stripe_session_id='cs_failed_resolution',
+            stripe_refund_id='re_failed_refund',
+            reason='unavailable_event',
         )
 
         refund = SimpleNamespace(
@@ -778,10 +922,20 @@ class WebhookTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         booking.refresh_from_db()
+        resolution.refresh_from_db()
 
-        self.assertEqual(
-            booking.refund_status,
-            'failed',
+        self.assertEqual(booking.refund_status, 'failed')
+        self.assertEqual(resolution.refund_status, 'failed')
+
+        self.client.force_login(self.user)
+        success_response = self.client.get(
+            reverse('booking_success'),
+            {'session_id': resolution.stripe_session_id},
+        )
+
+        self.assertContains(
+            success_response,
+            'There was a problem completing the automatic refund.',
         )
 
     @patch('bookings.webhook.stripe.Webhook.construct_event')
