@@ -1620,6 +1620,7 @@ The following resources and technologies were used during the development of Eve
 - Amazon Web Services documentation
 - Heroku documentation
 - GitHub documentation
+- Event images: Images generated using Perchance.org.
 - Development support: ChatGPT provided guidance, code extracts and troubleshooting support throughout development.
 - Event seed generator: The initial concept and base code for `events/management/commands/seed_events.py` were created by the project author. ChatGPT was used to implement and expand the generator, including the event description generation, event-selection logic, description preview functionality and supporting command behaviour.
-- Favicon: Custom SVG created specifically for Event Horizon
+- Favicon: Custom SVG created specifically for Event Horizon with ChatGPT.
