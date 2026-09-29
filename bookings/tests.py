@@ -6,11 +6,14 @@ from unittest.mock import patch
 
 import stripe
 
+from django.contrib import admin
+from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from bookings.admin import CheckoutResolutionAdmin
 from bookings.models import CheckoutResolution
 from events.models import Booking, Category, Event
 
@@ -20,6 +23,50 @@ class StripeDict(dict):
 
     def to_dict(self):
         return dict(self)
+
+
+class CheckoutResolutionAdminTests(TestCase):
+    """Tests for the read-only payment-resolution audit interface."""
+
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='StrongPass123!',
+        )
+        self.request = RequestFactory().get(
+            '/admin/bookings/checkoutresolution/'
+        )
+        self.request.user = self.superuser
+        self.resolution_admin = CheckoutResolutionAdmin(
+            CheckoutResolution,
+            AdminSite(),
+        )
+
+    def test_checkout_resolution_admin_is_registered_and_read_only(self):
+        self.assertTrue(
+            admin.site.is_registered(CheckoutResolution)
+        )
+        self.assertTrue(
+            self.resolution_admin.has_view_permission(
+                self.request,
+            )
+        )
+        self.assertFalse(
+            self.resolution_admin.has_add_permission(
+                self.request,
+            )
+        )
+        self.assertFalse(
+            self.resolution_admin.has_change_permission(
+                self.request,
+            )
+        )
+        self.assertFalse(
+            self.resolution_admin.has_delete_permission(
+                self.request,
+            )
+        )
 
 
 class CheckoutViewTests(TestCase):
