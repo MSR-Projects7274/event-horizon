@@ -194,6 +194,16 @@ The trailing blank line was removed and the required top-level function spacing 
 
 The changes were formatting-only: no application logic was altered. The complete Django suite had already passed **80/80** after the functional 404 regression correction.
 
+A final project-wide Flake8 run was completed after the later accessibility, administration and documentation audit work. This identified one remaining `E501` line-length finding in `bookings/views.py`:
+
+```text
+.\bookings\views.py:58:80: E501 line too long (80 > 79 characters)
+```
+
+The availability message was split across adjacent f-strings without changing the generated text or application behaviour. Flake8 was then run again across the complete project and returned no output.
+
+The complete Django test suite was also run during this final validation pass and all **83/83 tests passed**.
+
 ## HTML - W3C Nu HTML Checker
 
 Rendered HTML was checked with the W3C Nu HTML Checker. Public pages were validated from the deployed site, while authenticated pages were checked using rendered page source so the validator received final HTML rather than Django template syntax.
@@ -220,6 +230,23 @@ After the later shared-template changes for the accessible search label and glob
 Document checking completed. No errors or warnings to show.
 ```
 
+A fresh final production validation pass was completed after the remaining interface and accessibility changes. The following rendered pages were checked again:
+
+- homepage;
+- event catalogue;
+- normal event detail;
+- `Not For The Faint Of Heart` event detail;
+- About;
+- login;
+- registration;
+- profile;
+- edit profile;
+- change password;
+- booking form;
+- cancellation confirmation.
+
+Public pages were checked directly by URL. Authenticated pages were checked using their rendered page source. Every page in the final representative set completed validation with no errors or warnings.
+
 ## CSS - W3C CSS Validation Service
 
 The final `static/css/style.css`, including reduced-motion rules, keyboard ticker focus handling and global feedback-message styling, was checked again using the W3C CSS Validation Service.
@@ -229,6 +256,8 @@ Result:
 ```text
 Congratulations! No Error Found.
 ```
+
+The validator reported no CSS errors. Its advisory warnings related to the static checking limitations of CSS custom properties and intentional controls that use matching background and border colours; these do not represent invalid CSS.
 
 ## JavaScript - JSHint
 
@@ -620,4 +649,4 @@ Current verified testing status:
 
 Automated coverage includes successful application behaviour together with regression tests for payment-service failures, explicit checkout feedback, form binding/validation, email failures, refund retry safety, asynchronous payment completion, failed-refund tracking, event-start enforcement, British Summer Time handling, historical payment-value preservation, concurrent duplicate webhook delivery, database-level booking validation and the distinction between unmatched routes and missing/protected resources.
 
-The latest full automated suite passes **83/83**. The earlier route-handler regression correction brought the suite to **80/80**, the later profile-cancellation visibility tests increased the automated total to 82, and the `CheckoutResolution` admin audit test increased the current total to 83. The Flake8 fixes changed only blank-line formatting and did not alter Python behaviour. Final Python, HTML, CSS and JavaScript validation all pass, production migrations are current, and the expanded Heroku acceptance pass is **14/14**.
+The latest full automated suite passes **83/83**. The earlier route-handler regression correction brought the suite to **80/80**, the later profile-cancellation visibility tests increased the automated total to 82, and the `CheckoutResolution` admin audit test increased the current total to 83. The Flake8 corrections were formatting-only and did not alter Python behaviour. Final Python, HTML, CSS and JavaScript validation all pass, production migrations are current, and the expanded Heroku acceptance pass is **14/14**.

@@ -1433,8 +1433,8 @@ Manual testing now records **81/81 completed checks passing**, including **14/14
 
 The final standards sweep also passes:
 
-- **Flake8:** no findings after two formatting-only corrections in `home/tests.py` and `home/views.py`
-- **W3C Nu HTML Checker:** final live homepage recheck completed with no errors or warnings; representative rendered pages had already passed the broader HTML validation pass
+- **Flake8:** no findings after the final project-wide validation pass; the last remaining issue was a single overlong availability-message line in `bookings/views.py`, which was wrapped without changing behaviour
+- **W3C Nu HTML Checker:** the final production validation pass completed with no errors or warnings across the homepage, event catalogue, normal and special event detail pages, About, login, registration, profile, edit profile, change password, booking form and cancellation confirmation
 - **W3C CSS Validation Service:** no errors after the final accessibility and feedback-message styling
 - **JSHint:** no errors or warnings after the reduced-motion JavaScript changes
 
