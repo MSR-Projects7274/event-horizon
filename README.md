@@ -640,6 +640,8 @@ They perform limited display operations such as:
 
 CSS controls layout, styling and responsive behaviour, while JavaScript provides client-side interaction and the special visual effects used by the **Not For The Faint Of Heart** experience.
 
+The HTML email templates are an intentional exception to the site's external stylesheet approach. Email clients provide inconsistent support for linked stylesheets, so presentation-critical email styling is written inline to improve rendering reliability across email clients. This inline styling is limited to email markup; browser-facing pages continue to use the project's external stylesheet.
+
 Database filtering, permission checks, capacity rules, booking mutation, Stripe operations and refund logic remain on the backend.
 
 ## Administrator Data Flow
