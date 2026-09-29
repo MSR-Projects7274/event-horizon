@@ -956,9 +956,15 @@ Install the project dependencies:
 pip install -r requirements.txt
 ```
 
-Create a `.env` file containing the required environment variables.
+Create a `.env` file in the project root using `.env.example` as a template.
 
-These include the appropriate database, Django secret key, Stripe credentials and external storage credentials.
+For local development, set `DEBUG=True`. When `DATABASE_URL` is not defined, Event Horizon automatically uses the local SQLite database at `db.sqlite3`. This is the recommended default for local development because it keeps development data separate from the production Neon PostgreSQL database.
+
+Do **not** place the production Neon `DATABASE_URL` in the local `.env` unless production database access is deliberately required. Using the production connection string locally would cause local management commands, administrator actions and application changes to operate on the live production database.
+
+Stripe should use test-mode credentials during local development. A Stripe CLI webhook secret can be used when testing webhook handling locally.
+
+Resend and Amazon S3 credentials are also required for the parts of the application that use email delivery and uploaded media. Real credentials must remain in the local `.env` file and must never be committed to Git.
 
 Run the database migrations:
 
@@ -980,7 +986,7 @@ python manage.py runserver
 
 The application can then be accessed through the local development server.
 
-> **Note:** Secret keys, Stripe credentials, database credentials and AWS credentials should never be committed to the repository. These values should be stored in environment variables.
+> **Note:** The `.env` file is excluded from Git. Secret keys, Stripe credentials, database credentials, Resend credentials and AWS credentials must never be committed to the repository. `.env.example` contains variable names and safe placeholder values only.
 
 * * *
 
