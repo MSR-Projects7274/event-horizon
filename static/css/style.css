@@ -51,6 +51,24 @@ body {
     line-height: 1.5;
 }
 
+.skip-link {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 1000;
+    padding: 0.7rem 1rem;
+    border-radius: var(--eh-radius-small);
+    background-color: var(--eh-night);
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-200%);
+    transition: transform var(--eh-transition);
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
 /* Header */
 
 header {
