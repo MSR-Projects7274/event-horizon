@@ -295,7 +295,8 @@ header {
 }
 
 .login-page .auth-card form input:focus {
-    outline: none;
+    outline: 3px solid var(--eh-accent-dark);
+    outline-offset: 2px;
     border-color: var(--eh-accent);
     box-shadow: 0 0 0 3px var(--eh-accent-soft);
 }
@@ -358,7 +359,8 @@ header {
 }
 
 .register-page .auth-card form input:focus {
-    outline: none;
+    outline: 3px solid var(--eh-accent-dark);
+    outline-offset: 2px;
     border-color: var(--eh-accent);
     box-shadow: 0 0 0 3px var(--eh-accent-soft);
 }
@@ -477,7 +479,8 @@ main {
 }
 
 .search-input-wrapper input:focus {
-    outline: none;
+    outline: 3px solid var(--eh-accent-dark);
+    outline-offset: 2px;
     border-color: var(--eh-accent);
     box-shadow: 0 0 0 3px var(--eh-accent-soft);
 }
@@ -1256,7 +1259,8 @@ footer {
 }
 
 .profile-form form input:focus {
-    outline: none;
+    outline: 3px solid var(--eh-accent-dark);
+    outline-offset: 2px;
     border-color: var(--eh-accent);
     box-shadow: 0 0 0 3px var(--eh-accent-soft);
 }
@@ -1631,7 +1635,8 @@ footer {
 
 .booking-page form input:focus,
 .booking-page form select:focus {
-    outline: none;
+    outline: 3px solid var(--eh-accent-dark);
+    outline-offset: 2px;
     border-color: var(--eh-accent);
 }
 
