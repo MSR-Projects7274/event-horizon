@@ -1633,6 +1633,56 @@ footer {
     flex-wrap: wrap;
 }
 
+.booking-success-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 190px;
+    padding: 0.7rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--eh-radius-small);
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+        background-color var(--eh-transition),
+        border-color var(--eh-transition),
+        color var(--eh-transition),
+        transform var(--eh-transition),
+        box-shadow var(--eh-transition);
+}
+
+.booking-success-actions .btn-primary {
+    border-color: var(--eh-night);
+    background-color: var(--eh-night);
+    color: #ffffff;
+}
+
+.booking-success-actions .btn-primary:hover {
+    border-color: var(--eh-accent-dark);
+    background-color: var(--eh-accent-dark);
+    box-shadow: 0 4px 12px rgba(23, 25, 35, 0.18);
+    transform: translateY(-2px);
+}
+
+.booking-success-actions .btn-secondary {
+    border-color: var(--eh-night);
+    background-color: var(--eh-surface);
+    color: var(--eh-night);
+}
+
+.booking-success-actions .btn-secondary:hover {
+    border-color: var(--eh-accent-dark);
+    background-color: var(--eh-accent-soft);
+    color: var(--eh-accent-dark);
+    box-shadow: 0 4px 12px rgba(23, 25, 35, 0.12);
+    transform: translateY(-2px);
+}
+
+.booking-success-actions .btn:focus-visible {
+    outline: 3px solid var(--eh-accent-dark);
+    outline-offset: 3px;
+}
+
 /* About Page */
 
 .about-page {
