@@ -55,7 +55,8 @@ def create_checkout_session(request, event_id):
             availability_message = 'Only 1 place is currently available.'
         else:
             availability_message = (
-                f'Only {event.places_remaining} places are currently available.'
+                f'Only {event.places_remaining} places are currently '
+                f'available.'
             )
 
         messages.error(
