@@ -1058,6 +1058,13 @@ footer {
     opacity: 0.7;
 }
 
+.sold-out-button:hover {
+    background-color: #777;
+    border-color: #777;
+    transform: none;
+    opacity: 0.7;
+}
+
 /* Special Event */
 
 .special-event {
@@ -1389,16 +1396,17 @@ footer {
     display: inline-block;
     margin-left: 0;
     padding: 0.6rem 1rem;
-    border: 1px solid #777;
+    border: 1px solid #666;
     border-radius: 5px;
-    background-color: #777;
+    background-color: #666;
     color: #fff;
     text-decoration: none;
     cursor: pointer;
 }
 
 .cancel-button:hover {
-    opacity: 0.85;
+    border-color: #555;
+    background-color: #555;
 }
 
 /* Cancel Booking Page */
@@ -1483,8 +1491,8 @@ footer {
 
 /* Secondary action: keep booking */
 .cancel-booking-actions > .event-view-button {
-    border: 1px solid #777;
-    background-color: #777;
+    border: 1px solid #666;
+    background-color: #666;
     color: #fff;
 }
 
