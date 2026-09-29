@@ -1172,6 +1172,7 @@ The following user stories were used to identify the core requirements of Event 
 
 - As an administrator, I want to create events so that customers can book them.
 - As an administrator, I want to edit event information so that the catalogue remains accurate.
+- As an administrator, I want to delete obsolete events when it is safe to do so, keeping the catalogue current.
 - As an administrator, I want to control event capacity so that bookings cannot exceed available spaces.
 - As an administrator, I want to view bookings so that I can manage attendance.
 
@@ -1179,7 +1180,7 @@ The following user stories were used to identify the core requirements of Event 
 
 # User Story Mapping
 
-| User Story | Feature | Implementation
+| User Story | Feature | Implementation |
 |---|---|---|
 | As a visitor, I want to browse upcoming events so that I can find something I am interested in. | Event catalogue | Dynamic event listing |
 | As a visitor, I want to filter events by category so that I can quickly find relevant events. | Category filtering | Database-driven categories and filtering |
@@ -1189,6 +1190,7 @@ The following user stories were used to identify the core requirements of Event 
 | As a user, I want to cancel an eligible booking so that I can free up my place. | Booking cancellation | Cancellation, refund and capacity update |
 | As an administrator, I want to create events so that customers can book them. | Event management | Django administration |
 | As an administrator, I want to edit event information so that the catalogue remains accurate. | Event management | Django administration |
+| As an administrator, I want to delete obsolete events when it is safe to do so, keeping the catalogue current. | Event management | Django administration with protected booking relationships |
 | As an administrator, I want to control event capacity so that bookings cannot exceed available spaces. | Capacity management | Dynamic availability and sold-out handling |
 | As an administrator, I want to view bookings so that I can manage attendance. | Booking management | Django administration |
 
@@ -1217,6 +1219,7 @@ Each user story was tested against the functionality implemented in the final ap
 | Cancel an eligible booking | Eligible bookings can be cancelled. The profile reflects the cancelled state and displays the associated refund status. |
 | Create events | Administrators can create new event records through Django Admin, including category, event information, price, capacity and imagery. |
 | Edit event information | Administrators can update existing event records through Django Admin. |
+| Delete obsolete events | Administrators can delete obsolete event records through Django Admin where existing protected booking relationships do not prevent deletion. Events with booking history remain protected so historical booking data cannot be accidentally removed. |
 | Control event capacity | Event capacity can be configured by administrators and is used by the application when calculating remaining availability. |
 | View bookings | Administrators can view stored booking records through Django Admin, including the associated user, event, quantity and creation time. |
 
