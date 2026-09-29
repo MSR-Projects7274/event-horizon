@@ -1412,7 +1412,7 @@ The fourth cycle exposed a wider regression when the full suite was run: genuine
 
 This documents the TDD evidence accurately rather than implying that every earlier feature in the project was originally developed test-first.
 
-Manual testing now records **80/80 completed checks passing**, including **14/14 production acceptance checks**. The added production checks cover reduced-motion behaviour, keyboard access to the animated event ticker, explicit Stripe-cancellation feedback, the route/resource 404 distinction, and deployment/database verification.
+Manual testing now records **81/81 completed checks passing**, including **14/14 production acceptance checks**. The added production checks cover reduced-motion behaviour, keyboard access to the animated event ticker, explicit Stripe-cancellation feedback, the route/resource 404 distinction, and deployment/database verification.
 
 The final standards sweep also passes:
 
