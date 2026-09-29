@@ -1120,9 +1120,9 @@ Django's static files are collected during the Heroku build process. The custom 
 
 Uploaded event media is stored externally in Amazon S3 rather than on Heroku's ephemeral filesystem. The final production catalogue contains 70 verified event images uploaded through Django Admin.
 
-## Deployment Issue Resolved During Development
+## Deployment Issues Resolved During Development
 
-An earlier deployment failed during `collectstatic` because a required dependency was missing from the production dependency set. The dependency configuration was corrected so the build environment contained all packages required by the application, after which static collection and deployment completed successfully.
+Two deployment issues were encountered during development. One deployment failed because the Python version configuration filename had been mistyped using an underscore instead of the required dash. A later deployment reached Django's `collectstatic` stage but failed because the `RESEND_API_KEY` environment variable had not yet been configured in Heroku. After correcting the Python version configuration and adding the missing environment variable, the application built and deployed successfully.
 
 </details>
 
@@ -1483,13 +1483,11 @@ The completed production catalogue contains 70 event images. Uploading them thro
 
 ## Deployment
 
-Deployment introduced additional challenges because the production environment does not behave exactly like the local development environment.
+Two deployment failures were encountered during development.
 
-One issue encountered during deployment occurred when Heroku attempted to run Django's `collectstatic` command and encountered a missing dependency.
+The first was caused by the Python version configuration filename being written with an underscore instead of the required dash. Correcting the filename allowed Heroku to recognise the intended Python version configuration.
 
-The build initially failed with a `ModuleNotFoundError` for `crispy_forms`, preventing Heroku from completing the static-file collection process.
-
-The dependency configuration was updated to ensure that all packages required by the application were available during deployment.
+The second occurred during Django's `collectstatic` stage because the `RESEND_API_KEY` environment variable had not been configured in Heroku. Django raised an `ImproperlyConfigured` error and the build stopped before static files could be collected. Adding the missing Heroku configuration variable resolved the issue and allowed deployment to complete successfully.
 
 ## Responsive Design
 
