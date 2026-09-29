@@ -11,7 +11,8 @@ from events.models import Category, Event
 
 # DESCRIPTION GENERATORS
 
-# BASE CODE BY MYSELF, FULLY IMPLEMENTED BY CHATGPT
+# Initial generator concept and base code by the project author;
+# expanded and implemented with ChatGPT assistance.
 
 THEME_DESCRIPTION_DATA = {
 
