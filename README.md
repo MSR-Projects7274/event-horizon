@@ -997,7 +997,7 @@ Event Horizon is deployed using Heroku.
 
 The current production deployment has been verified through the production acceptance tests documented in `TESTING.md`. **All 14 production acceptance checks pass**, including payment, accessibility, route-handling, deployment-check and S3 media verification.
 
-The application uses the Heroku Python buildpack and runs on the **Heroku-24 stack**. PostgreSQL provides the production relational database, Amazon S3 stores uploaded event media, Stripe handles payments and refunds, and Resend provides email delivery.
+The application uses the Heroku Python buildpack and runs on the **Heroku-24 stack**. The production relational database is PostgreSQL hosted by Neon, Amazon S3 stores uploaded event media, Stripe handles payments and refunds, and Resend provides email delivery.
 
 > **Email delivery limitation:** Event Horizon currently uses Resend's `onboarding@resend.dev` sender because the project does not have a custom domain. Resend restricts this test sender to the email address associated with the Resend account, so production booking and cancellation emails cannot currently be delivered to arbitrary user addresses. Full external email delivery would require a verified custom domain to be configured with Resend. This limitation does not affect booking creation, payment processing or refunds, which continue to function independently of email delivery.
 
@@ -1021,11 +1021,17 @@ heroku stack:set heroku-24 --app <app-name>
 heroku buildpacks:set heroku/python --app <app-name>
 ```
 
-3. Attach a Heroku PostgreSQL add-on using a currently available plan. Heroku supplies the resulting `DATABASE_URL` configuration variable automatically.
+3. Create a PostgreSQL database using Neon.
+
+Create a Neon project and database, then obtain the PostgreSQL connection string supplied by Neon. This connection string contains the database hostname, database name and authentication credentials and must be treated as a secret.
+
+Add the Neon connection string to the Heroku application's configuration as `DATABASE_URL`:
 
 ```bash
-heroku addons:create heroku-postgresql:<plan> --app <app-name>
+heroku config:set DATABASE_URL="<neon-postgresql-connection-string>" --app <app-name>
 ```
+
+Event Horizon reads `DATABASE_URL` through `dj-database-url`, allowing the same Django database configuration to connect to the Neon PostgreSQL database in production. The real connection string must never be committed to the repository.
 
 4. Configure the required application settings. Actual secret values must never be committed to Git:
 
@@ -1045,7 +1051,7 @@ AWS_STORAGE_BUCKET_NAME
 AWS_S3_REGION_NAME
 ```
 
-`ALLOWED_HOSTS` should contain the deployed hostname, while `CSRF_TRUSTED_ORIGINS` should contain its full HTTPS origin. The project timezone is configured in Django as `Europe/London` so event timing follows GMT/BST correctly.
+`DATABASE_URL` should contain the Neon PostgreSQL connection string configured in the previous step. `ALLOWED_HOSTS` should contain the deployed hostname, while `CSRF_TRUSTED_ORIGINS` should contain its full HTTPS origin. The project timezone is configured in Django as `Europe/London` so event timing follows GMT/BST correctly.
 
 5. Prepare the S3 media service. Create the bucket, configure credentials with permission to access it, then provide the bucket name and region through the AWS environment variables above. Django uses `django-storages`/Boto3 for uploaded media, while application static files are handled separately through WhiteNoise.
 
